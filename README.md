@@ -74,6 +74,31 @@ Settings → Community plugins.
 
 Requires Obsidian 1.4.0 or newer. The first board: ribbon icon or **NoteBoard: Create new kanban board**.
 
+## Install on iPad (with BRAT)
+
+You'll need Obsidian **1.11.4 or newer** on the iPad (Settings → About) and your vault open.
+
+1. **Open Settings.** Pull down from the top of the app (this opens the command palette), type
+   `settings` and pick **Open settings**. The gear is usually at the bottom of the left sidebar too.
+2. **Settings → Community plugins → Turn on community plugins.**
+3. **Browse**, search **BRAT** (by TfTHacker), then **Install** and **Enable**.
+4. Pull down again for the command palette and run **"BRAT: Add a beta plugin for testing"**.
+   Paste `sennafaris28/noteboard` and confirm. Run it again with `sennafaris28/slashcommands`.
+5. **Settings → Community plugins → Installed plugins** and switch **NoteBoard** and **SlashCommands** on
+   (BRAT may already have done it).
+6. Try it: run **"NoteBoard: Create new kanban board"**, and type `/` at the start of a line in a note.
+
+**Updating later:** run BRAT's **Check for updates**. BRAT only sees *releases*, so a change isn't picked
+up until a new release is published (see [Releasing](#releasing)).
+
+**If something goes wrong**
+
+- *BRAT says it can't find a release or manifest* — check the spelling of the repo path.
+- *Plugins disappear after reopening the app* — a sync tool may be overwriting `.obsidian`;
+  exclude it from sync.
+- *Dragging doesn't work* — hold an item about 0.4 s until a ring appears, then drag.
+  Touch support has had little testing on real devices, so please report what you see.
+
 ## Companion plugin
 
 The Notion-style `/` menu (headings, to-do, lists, tables…) lives in a separate plugin,
@@ -85,6 +110,18 @@ The Notion-style `/` menu (headings, to-do, lists, tables…) lives in a separat
 npm install
 npm run build   # type-check + bundle to main.js
 npm run dev     # watch mode
+```
+
+## Releasing
+
+BRAT and Obsidian install from GitHub *releases*, not from plain pushes.
+
+1. Bump `version` in `manifest.json` and add it to `versions.json`.
+2. `npm run build`, then commit and `git push`.
+3. Create the release — the tag must equal the manifest version exactly, with no `v`:
+
+```bash
+gh release create 1.0.1 main.js manifest.json styles.css --title "1.0.1" --notes "What changed"
 ```
 
 ## Notes & limits
