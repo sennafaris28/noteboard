@@ -1,0 +1,1664 @@
+/* ============================================================
+   NoteBoard for Obsidian — styles
+   Aims to mirror Notion's board view in light & dark themes.
+   ============================================================ */
+
+.nk-root {
+  --nk-card-radius: 6px;
+  --nk-col-width: 300px;
+  --nk-col-shadow: 1; /* multiplier, driven by board config (colShadow %) */
+  --nk-gap: 12px;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+/* ---------- Toolbar ---------- */
+.nk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  flex: 0 0 auto;
+  /* Full-width header bar. Negative spread keeps the shadow a clean downward
+     line — no top/side bleed, so it reads as a bar, not a floating box. */
+  position: relative;
+  z-index: 5;
+  background: var(--background-primary);
+  box-shadow: 0 6px 8px -6px rgba(15, 15, 15, 0.22);
+}
+.theme-dark .nk-toolbar {
+  box-shadow: 0 6px 10px -6px rgba(0, 0, 0, 0.55);
+}
+.nk-title {
+  font-size: 18px;
+  font-weight: 650;
+  color: var(--text-normal);
+}
+.nk-toolbar-spacer { flex: 1 1 auto; }
+.nk-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--background-modifier-form-field);
+  border: none;
+}
+.nk-search-icon { display: inline-flex; opacity: 0.6; }
+.nk-search-icon svg { width: 15px; height: 15px; }
+.nk-search input {
+  border: none;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+  width: 160px;
+  font-size: 13px;
+  color: var(--text-normal);
+}
+.nk-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+.nk-icon-btn:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.nk-icon-btn.nk-sm { width: 22px; height: 22px; }
+.nk-icon-btn svg { width: 16px; height: 16px; }
+.nk-icon-btn.nk-sm svg { width: 14px; height: 14px; }
+
+/* ---------- Board ---------- */
+.nk-board {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nk-gap);
+  padding: 16px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 100%;
+}
+
+/* ---------- Column ---------- */
+.nk-column {
+  flex: 0 0 var(--nk-col-width);
+  width: var(--nk-col-width);
+  display: flex;
+  flex-direction: column;
+  max-height: 100%;
+  border-radius: 10px;
+  /* Column leans toward the board tone so it reads as a quiet surface; the
+     cards (lighter) and the shadow do the standing-out, not the column. */
+  background: var(--background-primary-alt);
+  border: none;
+  padding: 6px 6px 2px;
+  box-shadow:
+    0 1px 2px rgba(15, 15, 15, calc(0.04 * var(--nk-col-shadow))),
+    0 4px 12px rgba(15, 15, 15, calc(0.04 * var(--nk-col-shadow)));
+  transition: box-shadow 0.12s, transform 0.12s;
+}
+.theme-dark .nk-column {
+  /* Quiet column leaning toward the board — clearly below the card tone. */
+  background: #1e2127;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, calc(0.15 * var(--nk-col-shadow))),
+    0 6px 16px rgba(0, 0, 0, calc(0.175 * var(--nk-col-shadow)));
+}
+.nk-column:hover {
+  box-shadow:
+    0 2px 4px rgba(15, 15, 15, calc(0.05 * var(--nk-col-shadow))),
+    0 10px 24px rgba(15, 15, 15, calc(0.07 * var(--nk-col-shadow)));
+  transform: translateY(-1px);
+}
+.theme-dark .nk-column:hover {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, calc(0.175 * var(--nk-col-shadow))),
+    0 12px 28px rgba(0, 0, 0, calc(0.25 * var(--nk-col-shadow)));
+}
+.nk-column.nk-col-drop { background: var(--background-modifier-hover); }
+.nk-column.nk-col-dragging { opacity: 0.5; }
+
+.nk-col-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 4px 8px;
+  cursor: grab;
+}
+.nk-col-header:active { cursor: grabbing; }
+.nk-col-title { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.nk-col-count { color: var(--text-faint); font-size: 13px; font-weight: 500; }
+.nk-col-actions { display: flex; align-items: center; gap: 2px; opacity: 0; transition: opacity 0.1s; }
+.nk-column:hover .nk-col-actions { opacity: 1; }
+
+.nk-col-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  padding: 2px;
+  min-height: 40px;
+  flex: 1 1 auto;
+  border-radius: 6px;
+}
+.nk-col-cards.nk-col-dropzone {
+  background: var(--background-modifier-hover);
+  outline: 2px solid var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+.nk-col-footer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.nk-col-footer:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.nk-footer-icon { display: inline-flex; }
+.nk-footer-icon svg { width: 14px; height: 14px; }
+
+/* Collapsed column */
+.nk-column.nk-collapsed {
+  flex: 0 0 auto;
+  width: auto;
+}
+.nk-col-header-collapsed {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  writing-mode: vertical-rl;
+  cursor: pointer;
+  border-radius: 8px;
+}
+.nk-col-header-collapsed:hover { background: var(--background-modifier-hover); }
+.nk-col-header-collapsed .nk-icon-btn { writing-mode: horizontal-tb; }
+
+/* ---------- Card ---------- */
+.nk-card {
+  position: relative;
+  /* Cards are the lighter, floating surface that sits above the quiet column. */
+  background: var(--background-secondary);
+  border: none;
+  border-radius: var(--nk-card-radius);
+  padding: 8px 10px;
+  box-shadow: 0 1px 2px rgba(15, 15, 15, 0.08);
+  cursor: pointer;
+  transition: background 0.08s, box-shadow 0.08s;
+}
+.nk-card-menu-btn {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  background: var(--background-primary);
+  opacity: 0;
+  transition: opacity 0.08s, background 0.08s;
+  cursor: pointer;
+}
+.nk-card:hover .nk-card-menu-btn { opacity: 1; }
+.nk-card-menu-btn:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.nk-card-menu-btn svg { width: 16px; height: 16px; }
+.theme-dark .nk-card {
+  /* A step lighter than the column so cards clearly float above it. */
+  background: #272b31;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.nk-card:hover { background: var(--background-modifier-hover); }
+.nk-card.nk-card-dragging { opacity: 0.4; }
+.nk-card-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-normal);
+  line-height: 1.3;
+  word-break: break-word;
+  padding-right: 20px;
+}
+.nk-card-icon { flex: 0 0 20px; width: 20px; text-align: center; font-size: 15px; line-height: 1.3; }
+.nk-card-title-text { min-width: 0; }
+.nk-card-props {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+/* Line chips up with the title text, not the icon (20px icon + 6px gap). */
+.nk-card.has-icon .nk-card-props { padding-left: 26px; }
+.nk-hidden { display: none !important; }
+
+.nk-prop-date, .nk-prop-check, .nk-prop-num, .nk-prop-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.nk-prop-icon svg, .nk-prop-check svg { width: 13px; height: 13px; }
+.nk-prop-text { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Drop indicator — a card-sized placeholder slot so it's clear the card
+   lands IN the column, not onto an existing card. */
+.nk-drop-indicator {
+  min-height: 40px;
+  border: 2px dashed var(--interactive-accent);
+  border-radius: var(--nk-card-radius);
+  background: hsla(var(--interactive-accent-hsl), 0.12);
+  margin: 1px 2px;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+/* The trailing slot (dropping at the end of the column) grows to fill the
+   empty space below the last card, so the whole area below reads as a target. */
+.nk-drop-indicator:last-child {
+  flex: 1 1 auto;
+  min-height: 56px;
+}
+
+/* ---------- Add column ---------- */
+.nk-add-column { flex: 0 0 auto; }
+.nk-add-column-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.nk-add-column-btn:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+
+/* ---------- Chips / pills ---------- */
+.nk-chip, .nk-col-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 180px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--nk-fg, var(--text-normal));
+  background: var(--nk-bg, var(--background-modifier-border));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nk-col-pill { font-weight: 600; }
+.nk-chip-x {
+  display: inline-flex;
+  cursor: pointer;
+  opacity: 0.5;
+}
+.nk-chip-x:hover { opacity: 1; }
+.nk-chip-x svg { width: 11px; height: 11px; }
+
+/* ---------- Color palette (light) ---------- */
+.nk-color-default { --nk-bg: rgba(135,131,120,0.15); --nk-fg: var(--text-normal); }
+.nk-color-gray   { --nk-bg: #e3e2e0; --nk-fg: #37352f; }
+.nk-color-brown  { --nk-bg: #eee0da; --nk-fg: #442a1e; }
+.nk-color-orange { --nk-bg: #fadec9; --nk-fg: #693c23; }
+.nk-color-yellow { --nk-bg: #fdecc8; --nk-fg: #604a1f; }
+.nk-color-green  { --nk-bg: #dbeddb; --nk-fg: #1c3829; }
+.nk-color-blue   { --nk-bg: #d3e5ef; --nk-fg: #183347; }
+.nk-color-purple { --nk-bg: #e8deee; --nk-fg: #412454; }
+.nk-color-pink   { --nk-bg: #f5e0e9; --nk-fg: #5c1f41; }
+.nk-color-red    { --nk-bg: #ffe2dd; --nk-fg: #5d1715; }
+
+/* ---------- Color palette (dark) ---------- */
+.theme-dark .nk-color-default { --nk-bg: rgba(255,255,255,0.055); --nk-fg: var(--text-normal); }
+.theme-dark .nk-color-gray   { --nk-bg: #5a5a5a; --nk-fg: #e6e6e4; }
+.theme-dark .nk-color-brown  { --nk-bg: #603b2c; --nk-fg: #eadfd9; }
+.theme-dark .nk-color-orange { --nk-bg: #854c1d; --nk-fg: #f8e0cd; }
+.theme-dark .nk-color-yellow { --nk-bg: #89632a; --nk-fg: #faeccb; }
+.theme-dark .nk-color-green  { --nk-bg: #2b593f; --nk-fg: #d7ecd9; }
+.theme-dark .nk-color-blue   { --nk-bg: #28456c; --nk-fg: #d2e4f0; }
+.theme-dark .nk-color-purple { --nk-bg: #492f64; --nk-fg: #e6ddee; }
+.theme-dark .nk-color-pink   { --nk-bg: #69314c; --nk-fg: #f4dfe9; }
+.theme-dark .nk-color-red    { --nk-bg: #6e3630; --nk-fg: #ffe0db; }
+
+/* ============================================================
+   Card peek modal
+   ============================================================ */
+.nk-card-modal {
+  width: 92vw;
+  max-width: 1500px;
+  height: 90vh;
+}
+.nk-card-modal .modal-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  padding-top: 8px;
+}
+.nk-card-modal input.nk-card-modal-title {
+  width: 100%;
+  height: auto;
+  border: none;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+  font-size: 32px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--text-normal);
+  padding: 4px 2px;
+  margin-bottom: 10px;
+}
+.nk-card-modal input.nk-card-modal-title:focus { box-shadow: none; }
+.nk-card-modal input.nk-card-modal-title::placeholder { color: var(--text-faint); font-weight: 600; }
+.nk-card-modal-props { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.nk-prop-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 2px;
+  min-height: 30px;
+}
+.nk-prop-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 150px;
+  flex: 0 0 150px;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding-top: 3px;
+}
+.nk-prop-type-icon { display: inline-flex; opacity: 0.7; }
+.nk-prop-type-icon svg { width: 15px; height: 15px; }
+.nk-prop-value { flex: 1 1 auto; min-width: 0; }
+.nk-prop-value input[type="text"],
+.nk-prop-value input[type="number"],
+.nk-prop-value input[type="date"] {
+  width: 100%;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: var(--text-normal);
+}
+.nk-prop-value input[type="text"]:hover,
+.nk-prop-value input[type="number"]:hover,
+.nk-prop-value input[type="date"]:hover { background: var(--background-modifier-hover); }
+.nk-prop-value input:focus { background: var(--background-modifier-form-field); }
+
+.nk-select-box {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  min-height: 26px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.nk-select-box:hover { background: var(--background-modifier-hover); }
+.nk-select-empty { color: var(--text-faint); font-size: 13px; }
+
+.nk-add-prop {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.nk-add-prop:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+
+.nk-card-divider { margin: 12px 0; border: none; border-top: 1px solid var(--background-modifier-border); }
+.nk-card-body-wrap {
+  margin-bottom: 12px;
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 160px;
+}
+.nk-card-render {
+  flex: 1 1 auto;
+  min-height: 160px;
+  overflow-y: auto;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  padding: 10px 14px;
+  cursor: text;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.nk-card-render:hover { border-color: var(--background-modifier-border-hover); }
+.nk-card-render > :first-child { margin-top: 0; }
+.nk-card-render > :last-child { margin-bottom: 0; }
+.nk-render-empty { color: var(--text-faint); }
+
+/* Embedded live editor */
+.nk-card-editor-host {
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 160px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.nk-card-editor-host .workspace-leaf {
+  flex: 1 1 auto;
+  height: 100%;
+  min-width: 0;
+}
+/* We only want the editor surface, not the tab/header chrome. */
+.nk-card-editor-host .view-header { display: none; }
+.nk-card-editor-host .workspace-leaf-content { height: 100%; }
+/* Skip the note's inline title + Properties panel — the modal shows those
+   above. Jump straight to the body content. */
+.nk-card-editor-host .inline-title,
+.nk-card-editor-host .metadata-container,
+.nk-card-editor-host .metadata-properties-heading,
+.nk-card-editor-host .cm-fold-indicator { display: none !important; }
+.nk-card-body {
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 160px;
+  resize: none;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  font-family: var(--font-text, inherit);
+}
+.nk-card-modal-footer { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+.nk-card-modal-footer-spacer { flex: 1 1 auto; }
+.nk-danger { color: var(--text-error); }
+
+/* Solid footer buttons: red (Delete), green (Open as note), blue (OK) */
+.nk-card-modal button.nk-btn {
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-weight: 600;
+  padding: 6px 16px;
+  cursor: pointer;
+  transition: filter 0.1s, box-shadow 0.1s;
+}
+.nk-card-modal button.nk-btn:hover { filter: brightness(1.1); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+.nk-card-modal button.nk-btn-red { background: #d64545; }
+.nk-card-modal button.nk-btn-green { background: #2e9e5b; }
+.nk-card-modal button.nk-btn-blue { background: var(--interactive-accent); }
+
+/* ============================================================
+   Settings modal
+   ============================================================ */
+.nk-settings-modal { width: min(640px, 90vw); }
+.nk-settings-modal h4 { margin: 18px 0 6px; color: var(--text-normal); }
+.nk-toggle-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.nk-toggle-chip {
+  padding: 3px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--background-modifier-border);
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.nk-toggle-chip.is-on {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+.nk-muted { color: var(--text-faint); font-size: 13px; }
+.nk-swatch { border-radius: 4px !important; background: var(--nk-bg) !important; }
+
+/* ---------- Color picker ---------- */
+.nk-colorpicker { display: flex; flex-direction: column; gap: 6px; }
+.nk-cp-label { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.nk-cp-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.nk-cp-chip { cursor: pointer; }
+.nk-chip.is-sel { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
+.nk-cp-swatches { display: flex; flex-wrap: wrap; gap: 6px; }
+.nk-cp-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--background-modifier-border);
+  transition: transform 0.06s;
+}
+.nk-cp-swatch:hover { transform: scale(1.08); }
+.nk-cp-swatch.is-sel { outline: 2px solid var(--interactive-accent); outline-offset: 1px; }
+.nk-cp-hexrow { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.nk-cp-label-inline { margin-top: 0; }
+.nk-cp-hexpreview {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1px solid var(--background-modifier-border);
+  flex: 0 0 auto;
+}
+.nk-cp-hexinput { flex: 1 1 auto; }
+.nk-option-row { gap: 6px; }
+.nk-prompt-row { border: none; padding-top: 4px; }
+
+/* ---------- Page icon (Notion-style) ---------- */
+.nk-icon-zone { margin-bottom: 6px; }
+.nk-icon-big {
+  display: inline-block;
+  font-size: 44px;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.08s;
+}
+.nk-icon-big:hover { background: var(--background-modifier-hover); }
+.nk-icon-big.nk-icon-random { opacity: 0.45; }
+.nk-icon-big.nk-icon-random:hover { opacity: 1; }
+.nk-icon-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--text-faint);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.08s, color 0.08s;
+}
+.nk-icon-add:hover { background: var(--background-modifier-hover); color: var(--text-muted); }
+
+/* ---------- Emoji picker ---------- */
+.nk-emoji-top { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.nk-emoji-search {
+  flex: 1 1 auto;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-modifier-form-field);
+  color: var(--text-normal);
+  font-size: 14px;
+}
+.nk-emoji-remove {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.nk-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 4px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 2px;
+}
+.nk-emoji-cell {
+  font-size: 24px;
+  text-align: center;
+  padding: 6px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.06s;
+}
+.nk-emoji-cell:hover { background: var(--background-modifier-hover); }
+.nk-emoji-cell.is-sel { outline: 2px solid var(--interactive-accent); outline-offset: -2px; }
+.nk-emoji-empty { grid-column: 1 / -1; text-align: center; color: var(--text-faint); padding: 16px; }
+
+/* =================================================================
+   Toolbar toggles (Board | Timeline, Quests | Status, zoom)
+   ================================================================= */
+.nk-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 7px;
+  background: var(--background-modifier-form-field);
+}
+.nk-seg-btn,
+.nk-seg-solo {
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.1s, color 0.1s;
+}
+.nk-seg-btn:hover,
+.nk-seg-solo:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+.nk-seg-btn.is-active {
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  box-shadow: 0 1px 3px rgba(15, 15, 15, 0.12);
+}
+.theme-dark .nk-seg-btn.is-active { background: #272b31; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+.nk-seg-solo { background: var(--background-modifier-form-field); padding: 5px 10px; }
+
+/* Quest label on a card (status-grouped board) */
+.nk-card-quest {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+.nk-date-input { width: 100%; margin-bottom: 8px; }
+
+/* =================================================================
+   Quest timeline — shared axis; Rows (A), Weeks (C), Collapsed (B)
+   ================================================================= */
+.nk-tl { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.nk-tl-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; position: relative; }
+.nk-tl-grid {
+  position: relative;
+  min-height: 100%;
+  padding-bottom: 32px;
+  --nk-tl-surface: var(--background-primary-alt);
+  --nk-tl-card: var(--background-secondary);
+  --nk-tl-faint: rgba(0, 0, 0, 0.04);
+  --nk-tl-major: rgba(0, 0, 0, 0.09);
+  --nk-tl-label-shadow: 6px 0 14px -6px rgba(15, 15, 15, 0.18);
+}
+.theme-dark .nk-tl-grid {
+  --nk-tl-surface: #1e2127;
+  --nk-tl-card: #272b31;
+  --nk-tl-faint: rgba(255, 255, 255, 0.03);
+  --nk-tl-major: rgba(255, 255, 255, 0.075);
+  --nk-tl-label-shadow: 8px 0 16px -6px rgba(0, 0, 0, 0.55);
+}
+
+/* ---- Gridlines, axis, today, hover cursor */
+.nk-tl-gridlines { position: absolute; top: 34px; bottom: 0; z-index: 0; pointer-events: none; }
+.nk-tl-gridline { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--nk-tl-faint); }
+.nk-tl-gridline.is-major { background: var(--nk-tl-major); }
+
+.nk-tl-axis {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  display: flex;
+  height: 34px;
+  background: var(--background-primary);
+  box-shadow: 0 6px 8px -6px rgba(15, 15, 15, 0.2);
+}
+.theme-dark .nk-tl-axis { box-shadow: 0 6px 10px -6px rgba(0, 0, 0, 0.55); }
+.nk-tl-corner {
+  position: sticky;
+  left: 0;
+  z-index: 7;
+  flex: 0 0 var(--nk-tl-label-w);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: var(--background-primary);
+}
+.nk-tl-axis-track { position: relative; flex: 0 0 auto; }
+.nk-tl-tick {
+  position: absolute;
+  top: 10px;
+  padding-left: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--text-faint);
+}
+.nk-tl-tick.is-major { color: var(--text-muted); font-weight: 600; }
+
+.nk-tl-today,
+.nk-tl-hover {
+  position: absolute;
+  top: 34px;
+  bottom: 0;
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+}
+.nk-tl-today { width: 2px; background: var(--interactive-accent); opacity: 0.55; }
+.nk-tl-hover { width: 1px; background: var(--text-faint); opacity: 0; transition: opacity 0.1s; }
+.nk-tl-grid.is-hovering .nk-tl-hover { opacity: 0.6; }
+.nk-tl-today-pill,
+.nk-tl-hover-pill {
+  position: absolute;
+  bottom: 5px;
+  transform: translateX(-50%);
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.nk-tl-today-pill { color: #fff; background: var(--interactive-accent); z-index: 2; }
+.nk-tl-hover-pill {
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  opacity: 0;
+  z-index: 3;
+}
+.nk-tl-grid.is-hovering .nk-tl-hover-pill { opacity: 1; }
+
+/* ---- Blocks & rows */
+.nk-tl-block { position: relative; margin-top: 14px; }
+.nk-tl-row { position: relative; display: flex; align-items: stretch; }
+.nk-tl-label {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  flex: 0 0 var(--nk-tl-label-w);
+  width: var(--nk-tl-label-w);
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  background: var(--nk-tl-surface);
+  box-shadow: var(--nk-tl-label-shadow);
+  transition: background 0.1s;
+}
+.nk-tl-row.is-first > .nk-tl-label { border-top-right-radius: 10px; }
+.nk-tl-row.is-last > .nk-tl-label { border-bottom-right-radius: 10px; }
+.nk-tl-track { position: relative; flex: 0 0 auto; }
+.nk-tl-headrow > .nk-tl-track,
+.nk-tl-footrow > .nk-tl-track,
+.nk-tl-bucketrow > .nk-tl-track { cursor: copy; }
+
+/* Header row */
+.nk-tl-headrow > .nk-tl-label {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 4px;
+}
+.nk-tl-qhead { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.nk-tl-chev { flex: 0 0 auto; }
+.nk-tl-qicon { flex: 0 0 auto; font-size: 15px; }
+.nk-tl-qname { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.nk-tl-more { margin-left: auto; opacity: 0; transition: opacity 0.1s; }
+.nk-tl-label:hover .nk-tl-more { opacity: 1; }
+.nk-tl-qmeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding-left: 28px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.nk-tl-mini {
+  flex: 0 0 54px;
+  height: 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: rgba(127, 127, 127, 0.2);
+}
+.nk-tl-mini-fill { height: 100%; border-radius: 3px; background: var(--interactive-accent); }
+.nk-tl-qmeta-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nk-tl-block.is-drop-label .nk-tl-label { background: hsla(var(--interactive-accent-hsl), 0.14); }
+.nk-tl-block.is-drop-label .nk-tl-headrow .nk-tl-qmeta-txt::after {
+  content: " · drop to unschedule";
+  color: var(--interactive-accent);
+}
+
+/* Quest bar: faint body, solid fill = progress, 🏁 at Target */
+.nk-tl-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform: translateY(-50%);
+  background: var(--nk-tl-major);
+}
+.nk-tl-bar {
+  position: absolute;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  overflow: hidden;
+  z-index: 1;
+}
+.nk-tl-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--nk-bg, var(--interactive-accent));
+  opacity: 0.3;
+}
+.nk-tl-bar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--nk-bg, var(--interactive-accent));
+}
+.nk-tl-flag {
+  position: absolute;
+  font-size: 16px;
+  line-height: 1;
+  transform: translate(-15%, -95%);
+  z-index: 2;
+  user-select: none;
+}
+
+/* Diamonds + clusters */
+.nk-tl-diamond {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  box-sizing: border-box;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--nk-bg, var(--text-muted));
+  border: 1.5px solid var(--nk-fg, transparent);
+  box-shadow: 0 0 0 2px var(--background-primary);
+  cursor: grab;
+  z-index: 2;
+  transition: transform 0.1s;
+}
+.nk-tl-diamond:hover { transform: translate(-50%, -50%) rotate(45deg) scale(1.25); }
+.nk-tl-diamond.is-done { opacity: 0.5; }
+.nk-tl-diamond.is-overdue { box-shadow: 0 0 0 2px var(--background-primary), 0 0 0 4px #e5534b; }
+.nk-tl-diamond.is-dragging { opacity: 0.3; }
+.nk-tl-cluster {
+  position: absolute;
+  min-width: 20px;
+  height: 20px;
+  box-sizing: border-box;
+  padding: 0 6px;
+  border-radius: 10px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--background-primary);
+  cursor: pointer;
+  z-index: 3;
+}
+.nk-tl-cluster.is-overdue { background: #e5534b; }
+.nk-tl-dname {
+  position: absolute;
+  top: 36px;
+  transform: translateX(-50%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.nk-tl-dlabel {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.nk-tl-dlabel.is-overdue { color: #e5534b; }
+.nk-tl-dlabel.is-done { opacity: 0.5; }
+
+/* Rows layout: one task per row */
+.nk-tl-taskrow > .nk-tl-label { padding-left: 30px; }
+.nk-tl-taskrow:hover > .nk-tl-track { background: var(--nk-tl-faint); }
+.nk-tl-task {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-normal);
+  cursor: pointer;
+}
+.nk-tl-task:hover { background: var(--background-modifier-hover); }
+.nk-tl-task.is-done { opacity: 0.55; }
+.nk-tl-task.is-done .nk-tl-ctitle { text-decoration: line-through; }
+.nk-tl-nodate { flex: 0 0 auto; margin-left: auto; font-size: 10.5px; color: var(--text-faint); }
+.nk-tl-footrow > .nk-tl-label { padding-left: 24px; }
+
+/* Shared task bits */
+.nk-tl-sdot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--nk-bg, var(--text-faint));
+}
+.nk-tl-cicon { flex: 0 0 auto; font-size: 13px; }
+.nk-tl-ctitle { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nk-tl-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.nk-tl-add:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+
+/* Weeks layout: cards stacked in week (or month) columns */
+.nk-tl-bucketrow > .nk-tl-label {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 6px 12px 8px 24px;
+}
+.nk-tl-bucket {
+  position: absolute;
+  top: 5px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 4px;
+}
+.nk-tl-card,
+.nk-tl-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  border-radius: var(--nk-card-radius);
+  background: var(--nk-tl-card);
+  box-shadow: 0 1px 3px rgba(15, 15, 15, 0.1);
+  font-size: 12.5px;
+  color: var(--text-normal);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.theme-dark .nk-tl-card,
+.theme-dark .nk-tl-chip { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); }
+.nk-tl-card { height: 28px; padding: 0 8px; width: 100%; }
+.nk-tl-chip { height: 26px; padding: 0 8px; max-width: 100%; }
+.nk-tl-card:hover,
+.nk-tl-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+.nk-tl-card.is-dragging,
+.nk-tl-chip.is-dragging,
+.nk-tl-task.is-dragging { opacity: 0.4; }
+.nk-tl-cdate { flex: 0 0 auto; margin-left: auto; font-size: 11px; color: var(--text-faint); }
+.nk-tl-card.is-done { opacity: 0.55; }
+.nk-tl-card.is-done .nk-tl-ctitle { text-decoration: line-through; }
+.nk-tl-card.is-overdue { box-shadow: inset 2px 0 0 #e5534b, 0 2px 6px rgba(0, 0, 0, 0.3); }
+.nk-tl-card.is-overdue .nk-tl-cdate { color: #e5534b; }
+.nk-tl-tray-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.nk-tl-tray-toggle:hover { color: var(--text-normal); }
+.nk-tl-tray { display: flex; flex-wrap: wrap; gap: 4px; width: 100%; }
+
+/* Drag feedback */
+.nk-tl-guide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--interactive-accent);
+  z-index: 6;
+  pointer-events: none;
+}
+.nk-tl-guide-label {
+  position: absolute;
+  top: 2px;
+  left: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--interactive-accent);
+}
+.nk-tl-bucket-hl {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 8px;
+  background: hsla(var(--interactive-accent-hsl), 0.12);
+  outline: 2px dashed var(--interactive-accent);
+  outline-offset: -2px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.nk-tl-empty { position: sticky; left: 0; padding: 40px 24px; color: var(--text-muted); }
+
+/* =================================================================
+   Quest banner — note page (under the title) and card modal
+   ================================================================= */
+.nk-quest-banner {
+  margin: 6px 0 16px;
+  padding: 10px 14px 6px;
+  border-radius: 10px;
+  background: var(--background-primary-alt);
+  box-shadow: 0 2px 8px rgba(15, 15, 15, 0.08);
+  font-size: 12.5px;
+  user-select: none;
+}
+.theme-dark .nk-quest-banner { background: #1e2127; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
+.nk-card-modal .nk-quest-banner { margin: 0 0 12px; }
+.nk-qb-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.nk-qb-pill { display: inline-flex; align-items: center; gap: 5px; flex: 0 1 auto; min-width: 0; }
+.nk-qb-pill.is-link { cursor: pointer; }
+.nk-qb-pill.is-link:hover { filter: brightness(1.15); }
+.nk-qb-icon { font-size: 13px; }
+.nk-qb-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); }
+.nk-qb-spacer { flex: 1 1 auto; }
+.nk-qb-updated { flex: 0 0 auto; color: var(--text-faint); white-space: nowrap; }
+
+.nk-qb-line { position: relative; height: 40px; margin-top: 4px; }
+.nk-qb-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 14px;
+  height: 1px;
+  background: rgba(127, 127, 127, 0.22);
+}
+.nk-qb-bar {
+  position: absolute;
+  top: 14px;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.nk-qb-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--nk-bg, var(--interactive-accent));
+  opacity: 0.3;
+}
+.nk-qb-bar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--nk-bg, var(--interactive-accent)); }
+.nk-qb-end {
+  position: absolute;
+  top: 24px;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+.nk-qb-end.is-right { transform: translateX(-100%); }
+.nk-qb-flag { position: absolute; top: 14px; font-size: 14px; line-height: 1; transform: translate(-15%, -95%); }
+.nk-qb-today {
+  position: absolute;
+  top: 4px;
+  height: 20px;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--interactive-accent);
+  opacity: 0.6;
+  border-radius: 1px;
+}
+.nk-qb-diamond {
+  position: absolute;
+  top: 14px;
+  width: 9px;
+  height: 9px;
+  box-sizing: border-box;
+  border-radius: 2px;
+  transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--nk-bg, var(--text-muted));
+  border: 1.5px solid var(--nk-fg, transparent);
+  box-shadow: 0 0 0 2px var(--background-primary-alt);
+  cursor: pointer;
+  opacity: 0.75;
+  z-index: 1;
+}
+.theme-dark .nk-qb-diamond { box-shadow: 0 0 0 2px #1e2127; }
+.nk-qb-diamond:hover { opacity: 1; }
+.nk-qb-diamond.is-done { opacity: 0.4; }
+.nk-qb-diamond.is-overdue { box-shadow: 0 0 0 2px var(--background-primary-alt), 0 0 0 3.5px #e5534b; }
+.nk-qb-diamond.is-self {
+  width: 13px;
+  height: 13px;
+  opacity: 1;
+  cursor: default;
+  z-index: 2;
+  box-shadow: 0 0 0 2px var(--background-primary-alt), 0 0 0 4px var(--interactive-accent);
+}
+.nk-qb-self {
+  position: absolute;
+  top: 24px;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--interactive-accent);
+  z-index: 3;
+}
+
+/* =================================================================
+   Journey — one line per quest, tasks hanging below it in order
+   ================================================================= */
+.nk-jr {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden; /* each quest lane scrolls sideways on its own */
+  overflow-y: auto;
+  --nk-jr-surface: var(--background-primary-alt);
+  --nk-jr-card: var(--background-secondary);
+  --nk-jr-faint: rgba(0, 0, 0, 0.1);
+}
+.theme-dark .nk-jr {
+  --nk-jr-surface: #1e2127;
+  --nk-jr-card: #272b31;
+  --nk-jr-faint: rgba(255, 255, 255, 0.09);
+}
+.nk-jr-inner { padding: 14px 0 40px; }
+.nk-jr-block { margin-bottom: 22px; }
+.nk-jr-head {
+  position: sticky;
+  left: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  max-width: 90vw;
+  margin-left: 12px;
+  padding: 6px 12px 6px 6px;
+  border-radius: 10px;
+  background: var(--nk-jr-surface);
+  box-shadow: 0 2px 8px rgba(15, 15, 15, 0.08);
+}
+.theme-dark .nk-jr-head { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+.nk-jr-qicon { font-size: 15px; }
+.nk-jr-qname { cursor: pointer; white-space: nowrap; }
+.nk-jr-qmeta { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+.nk-jr-more { opacity: 0; transition: opacity 0.1s; }
+.nk-jr-head:hover .nk-jr-more { opacity: 1; }
+
+.nk-jr-lane { position: relative; margin-top: 6px; }
+.nk-jr-line,
+.nk-jr-walked {
+  position: absolute;
+  transform: translateY(-50%);
+  border-radius: 2px;
+}
+.nk-jr-line { height: 2px; background: var(--nk-jr-faint); }
+.nk-jr-walked { height: 4px; background: var(--nk-bg, var(--interactive-accent)); z-index: 1; }
+.nk-jr-start {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--nk-bg, var(--interactive-accent));
+  box-shadow: 0 0 0 3px var(--background-primary);
+  z-index: 2;
+}
+.nk-jr-node {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--background-primary);
+  border: 2px solid var(--nk-bg, var(--text-faint));
+  box-shadow: 0 0 0 3px var(--background-primary);
+  cursor: pointer;
+  z-index: 2;
+  transition: transform 0.1s;
+}
+.nk-jr-node:hover { transform: translate(-50%, -50%) scale(1.12); }
+.nk-jr-node.is-done { color: var(--nk-fg, #fff); background: var(--nk-bg, var(--interactive-accent)); }
+.nk-jr-node.is-overdue { border-color: #e5534b; }
+.nk-jr-node.is-add { border-style: dashed; color: var(--text-faint); }
+.nk-jr-node.is-add:hover { color: var(--interactive-accent); border-color: var(--interactive-accent); }
+.nk-jr-node.is-add svg { width: 14px; height: 14px; }
+.nk-jr-stem {
+  position: absolute;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--nk-jr-faint);
+}
+.nk-jr-card {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 9px 10px;
+  border-radius: var(--nk-card-radius);
+  background: var(--nk-jr-card);
+  box-shadow: 0 1px 3px rgba(15, 15, 15, 0.1);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.1s, box-shadow 0.1s;
+  z-index: 2;
+}
+.theme-dark .nk-jr-card { box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); }
+.nk-jr-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+.nk-jr-card:hover .nk-card-menu-btn { opacity: 1; }
+.nk-jr-card.is-dragging { opacity: 0.4; }
+.nk-jr-card.is-done { opacity: 0.6; }
+.nk-jr-card.is-done .nk-jr-ctitle { text-decoration: line-through; }
+.nk-jr-card.is-overdue { box-shadow: inset 2px 0 0 #e5534b, 0 2px 6px rgba(0, 0, 0, 0.3); }
+.nk-jr-cicon { flex: 0 0 18px; width: 18px; text-align: center; font-size: 13px; line-height: 1.35; }
+.nk-jr-cbody {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px; /* breathing room between title and status */
+  padding-right: 22px; /* room for the ⋯ button */
+}
+.nk-jr-ctitle {
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-normal);
+}
+.nk-jr-cfoot { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 11px; }
+.nk-jr-cfoot .nk-chip { font-size: 11px; flex-shrink: 0; white-space: nowrap; }
+.nk-jr-cdate { margin-left: auto; color: var(--text-faint); white-space: nowrap; }
+.nk-jr-card.is-overdue .nk-jr-cdate { color: #e5534b; }
+.nk-jr-ghost {
+  position: absolute;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: var(--nk-card-radius);
+  font-size: 12.5px;
+  color: var(--text-faint);
+  background: var(--nk-jr-faint);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity 0.1s, color 0.1s;
+}
+.nk-jr-ghost:hover { opacity: 1; color: var(--text-normal); }
+.nk-jr-flag {
+  position: absolute;
+  font-size: 18px;
+  line-height: 1;
+  transform: translate(-15%, -95%);
+  user-select: none;
+}
+.nk-jr-drop {
+  position: absolute;
+  width: 3px;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  background: var(--interactive-accent);
+  z-index: 4;
+  pointer-events: none;
+}
+.nk-jr-empty { padding: 40px 24px; color: var(--text-muted); }
+
+/* =================================================================
+   Touch (iPad / phones): no hover, so show the buttons and make
+   tap targets bigger. Long-press opens menus (see touch.ts).
+   ================================================================= */
+.nk-touch .nk-col-actions,
+.nk-touch .nk-card-menu-btn,
+.nk-touch .nk-tl-more,
+.nk-touch .nk-jr-more { opacity: 1; }
+.nk-touch .nk-icon-btn { min-width: 34px; min-height: 34px; }
+.nk-touch .nk-card-menu-btn { width: 28px; height: 28px; }
+.nk-touch .nk-seg-btn,
+.nk-touch .nk-seg-solo { padding: 7px 12px; }
+.nk-touch .nk-col-footer,
+.nk-touch .nk-tl-add { padding: 10px 8px; }
+.nk-touch .nk-card,
+.nk-touch .nk-col-header,
+.nk-touch .nk-tl-card,
+.nk-touch .nk-tl-chip,
+.nk-touch .nk-tl-task,
+.nk-touch .nk-tl-diamond,
+.nk-touch .nk-tl-label,
+.nk-touch .nk-jr-card,
+.nk-touch .nk-jr-head {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.nk-touch .nk-tl-diamond { width: 16px; height: 16px; }
+.nk-touch .nk-jr-node { width: 30px; height: 30px; }
+/* Long-press armed: release to open the menu. */
+.nk-pressing { box-shadow: 0 0 0 2px var(--interactive-accent) !important; }
+
+/* ---- Journey: goal text + branches (stacked parallel steps) */
+.nk-jr-goal {
+  position: sticky;
+  left: 12px;
+  width: max-content;
+  max-width: min(640px, 85vw);
+  margin: 6px 0 0 20px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.nk-jr-goal-label { font-weight: 600; color: var(--text-normal); }
+.nk-jr-rail,
+.nk-jr-tick {
+  position: absolute;
+  background: var(--nk-jr-faint);
+  pointer-events: none;
+}
+.nk-jr-rail { width: 2px; transform: translateX(-50%); border-radius: 1px; }
+.nk-jr-tick { height: 2px; transform: translateY(-50%); border-radius: 1px; }
+.nk-jr-branch {
+  position: absolute;
+  transform: translateY(-50%);
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-muted);
+  background: var(--background-primary);
+  box-shadow: 0 0 0 1px var(--nk-jr-faint);
+  z-index: 2;
+  pointer-events: none;
+}
+.nk-jr-card.is-stack-target {
+  box-shadow: 0 0 0 2px var(--interactive-accent), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.nk-jr-card.is-stack-target::after {
+  content: "Drop to stack (branch)";
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--interactive-accent);
+}
+
+/* ---- Timeline: resizable Quests pane */
+.nk-tl-resize {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 5;
+  touch-action: none;
+}
+.nk-tl-resize::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 3px;
+  width: 2px;
+  background: transparent;
+  transition: background 0.1s;
+}
+.nk-tl-resize:hover::after,
+.nk-tl-grid.is-resizing .nk-tl-resize::after { background: var(--interactive-accent); }
+.nk-tl-grid.is-resizing { cursor: col-resize; user-select: none; }
+.nk-touch .nk-tl-resize { right: -8px; width: 16px; }
+
+/* =================================================================
+   Quest types — definite (🏁) vs radiant (∞)
+   ================================================================= */
+.nk-qtype-row { display: flex; gap: 10px; margin: 4px 0 14px; }
+.nk-qtype {
+  flex: 1 1 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--background-modifier-form-field);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  transition: outline-color 0.1s, background 0.1s;
+}
+.nk-qtype:hover { background: var(--background-modifier-hover); }
+.nk-qtype.is-sel { outline-color: var(--interactive-accent); }
+.nk-qtype-head { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+.nk-qtype-icon { font-size: 16px; width: 20px; text-align: center; }
+.nk-qtype-desc { margin-top: 4px; font-size: 12px; line-height: 1.4; color: var(--text-muted); }
+
+.nk-col-radiant,
+.nk-jr-radiant {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--interactive-accent);
+  white-space: nowrap;
+}
+
+/* Radiant lane: logged order, small dots, dashed line running into ∞ */
+.nk-jr-line.is-tail {
+  height: 0;
+  background: none;
+  border-top: 2px dashed var(--nk-jr-faint);
+  transform: translateY(-1px);
+}
+.nk-jr-infinity {
+  position: absolute;
+  transform: translate(-50%, -52%);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-faint);
+  user-select: none;
+}
+.nk-jr-dot {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--background-primary);
+  border: 2px solid var(--nk-bg, var(--text-faint));
+  box-shadow: 0 0 0 3px var(--background-primary);
+  cursor: pointer;
+  z-index: 2;
+}
+.nk-jr-dot.is-done { background: var(--nk-bg, var(--interactive-accent)); opacity: 0.6; }
+.nk-jr-dot.is-overdue { border-color: #e5534b; }
+.nk-touch .nk-jr-dot { width: 18px; height: 18px; }
+.nk-jr-donebubble {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--text-muted);
+  background: var(--nk-jr-card);
+  box-shadow: 0 0 0 3px var(--background-primary), 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  z-index: 3;
+}
+.nk-jr-donebubble:hover,
+.nk-jr-donebubble.is-open { color: var(--interactive-accent); }
+.nk-jr-lane.is-drop-target {
+  border-radius: 10px;
+  background: hsla(var(--interactive-accent-hsl), 0.08);
+  outline: 2px dashed var(--interactive-accent);
+  outline-offset: -2px;
+}
+
+/* + New quest (bottom of Journey) */
+.nk-jr-newquest {
+  position: sticky;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0 0 22px 12px; /* spaced like a quest block */
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  background: var(--nk-jr-surface);
+  box-shadow: 0 2px 8px rgba(15, 15, 15, 0.08);
+  cursor: pointer;
+}
+.theme-dark .nk-jr-newquest { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
+.nk-jr-newquest:hover { color: var(--text-normal); }
+
+/* =================================================================
+   Abandoned tasks — closed like Done, but a red ✕ instead of a ✓
+   ================================================================= */
+.nk-jr-node.is-abandoned {
+  color: #fff;
+  background: #d64545;
+  border-color: #d64545;
+}
+.nk-jr-dot.is-abandoned { background: #d64545; border-color: #d64545; opacity: 0.6; }
+.nk-jr-x { color: #d64545; }
+.nk-jr-card.is-abandoned,
+.nk-tl-card.is-abandoned,
+.nk-tl-chip.is-abandoned,
+.nk-tl-task.is-abandoned { opacity: 0.55; }
+.nk-jr-card.is-abandoned .nk-jr-ctitle,
+.nk-tl-card.is-abandoned .nk-tl-ctitle,
+.nk-tl-chip.is-abandoned .nk-tl-ctitle,
+.nk-tl-task.is-abandoned .nk-tl-ctitle { text-decoration: line-through; }
+.nk-tl-diamond.is-abandoned,
+.nk-qb-diamond.is-abandoned {
+  background: #d64545;
+  border-color: #d64545;
+  opacity: 0.5;
+}
+.nk-tl-dlabel.is-abandoned { opacity: 0.5; text-decoration: line-through; }
+
+/* Per-quest horizontal scroll */
+.nk-jr-lanewrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.nk-jr-lanewrap::-webkit-scrollbar { height: 6px; }
+.nk-jr-lanewrap::-webkit-scrollbar-thumb { border-radius: 3px; background: var(--nk-jr-faint); }
+.nk-jr-lanewrap:hover::-webkit-scrollbar-thumb { background: var(--text-faint); }
+
+/* dd/mm/yyyy date field (replaces the locale-bound native date input) */
+.nk-datefield { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.nk-datefield-input {
+  width: 112px;
+  font-variant-numeric: tabular-nums;
+}
+.nk-datefield.is-invalid .nk-datefield-input { box-shadow: 0 0 0 2px #d64545; }
+.nk-datefield-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.nk-datefield-btn:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.nk-datefield-btn svg { width: 15px; height: 15px; }
+/* The native input only hosts the calendar popup; keep it invisible but anchored. */
+.nk-datefield-native {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  border: none;
+  padding: 0;
+}
+
+/* Archived count in a Journey quest header (archived tasks are hidden there) */
+.nk-jr-archived { font-size: 11.5px; color: var(--text-faint); white-space: nowrap; cursor: help; }
+
+/* Floating copy that follows a finger during a hold-then-drag */
+.nk-touch-ghost {
+  position: fixed !important;
+  margin: 0 !important;
+  z-index: 10000;
+  pointer-events: none !important;
+  opacity: 0.93;
+  transform-origin: center;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5) !important;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: none !important;
+}
+.nk-touch-ghost * { pointer-events: none !important; }
+
+/* Export button in the card modal's top-right corner (next to the close ×) */
+.nk-card-modal .nk-modal-actions {
+  position: absolute;
+  top: 10px;
+  right: 52px;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+}
+.nk-touch .nk-card-modal .nk-modal-actions { right: 58px; }
