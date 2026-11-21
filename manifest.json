@@ -1,7 +1,7 @@
 {
   "id": "noteboard",
   "name": "NoteBoard",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "minAppVersion": "1.4.0",
   "description": "A Notion-style kanban board where every card is a real markdown note. Group by any property, drag & drop, colored tags, and a card peek editor.",
   "author": "pizdec.tv",

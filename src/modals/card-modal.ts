@@ -49,6 +49,7 @@ export class CardModal extends NkModal {
   private flushBody: () => Promise<void> = async () => {};
   /** Kept so an undo/redo (or any outside edit) can refresh the open modal. */
   private propsEl: HTMLElement | null = null;
+  private topEl: HTMLElement | null = null;
   private titleInput: HTMLInputElement | null = null;
   private redrawIcon: () => void = () => {};
 
@@ -137,6 +138,7 @@ export class CardModal extends NkModal {
    */
   private async mountEditor(host: HTMLElement, body: string): Promise<void> {
     this.detachEditor();
+    const top = this.topEl; // the header block rendered with this host
     try {
       // WorkspaceLeaf's constructor is internal; create a detached leaf to host
       // the editor without attaching it to the workspace.
@@ -150,6 +152,7 @@ export class CardModal extends NkModal {
       host.addClass("nk-card-editor-host");
       const leafEl = (leaf as unknown as { containerEl: HTMLElement }).containerEl;
       host.appendChild(leafEl);
+      this.moveTopIntoEditor(leafEl, top);
       this.flushBody = async () => {
         const view = leaf.view as MarkdownView;
         await view?.save?.();
@@ -159,12 +162,30 @@ export class CardModal extends NkModal {
         (leaf as unknown as { onResize?: () => void }).onResize?.();
         // New cards start in the title; don't let the editor steal focus.
         if (!this.isNew) view?.editor?.focus?.();
+        // Focusing the editor may scroll its body into view; start at the top.
+        const scroller = leafEl.querySelector(".cm-scroller");
+        if (scroller) scroller.scrollTop = 0;
       }, 0);
     } catch (e) {
       console.error("NoteBoard: embedded editor unavailable, using fallback.", e);
       this.detachEditor();
       this.mountFallback(host, body);
     }
+  }
+
+  /**
+   * Put the header block inside the editor's scroll area, where Obsidian keeps
+   * a note's own title and Properties (.cm-sizer, before the text). If the
+   * editor's DOM isn't what we expect, the block stays above the editor.
+   */
+  private moveTopIntoEditor(leafEl: HTMLElement, top: HTMLElement | null): void {
+    const sizer = leafEl.querySelector(".cm-sizer");
+    if (!top || !sizer) return;
+    const content = sizer.querySelector(":scope > .cm-contentContainer");
+    if (content) sizer.insertBefore(top, content);
+    else sizer.prepend(top);
+    top.addClass("is-in-editor");
+    this.modalEl.addClass("nk-single-scroll");
   }
 
   /** Render/edit toggle used when the embedded editor can't be created. */
@@ -215,11 +236,19 @@ export class CardModal extends NkModal {
     const { contentEl } = this;
     contentEl.empty();
 
+    // Everything above the body (icon, title, banner, properties) lives in one
+    // block. With the embedded editor it moves into the editor's own scroller,
+    // so the card scrolls as a single page, like a real note: no second scroll
+    // area, and the note isn't squeezed by a long property list.
+    this.modalEl.removeClass("nk-single-scroll");
+    const top = contentEl.createDiv({ cls: "nk-card-modal-top" });
+    this.topEl = top;
+
     // --- icon ---
-    this.renderIcon(contentEl);
+    this.renderIcon(top);
 
     // --- title ---
-    const titleInput = contentEl.createEl("input", {
+    const titleInput = top.createEl("input", {
       cls: "nk-card-modal-title",
       attr: { type: "text", placeholder: "New note" },
     });
@@ -258,11 +287,11 @@ export class CardModal extends NkModal {
     // --- properties ---
     // --- quest banner (quest line + last edited) ---
     const qctx = questContext(this.config, this.file);
-    if (qctx) renderQuestBanner(contentEl.createDiv(), this.appRef, this.config, this.file, qctx);
+    if (qctx) renderQuestBanner(top.createDiv(), this.appRef, this.config, this.file, qctx);
 
     // Properties sit on a quiet panel (like a board column); each value is a
     // raised field on top of it (like a card).
-    const panel = contentEl.createDiv({ cls: "nk-card-modal-panel" });
+    const panel = top.createDiv({ cls: "nk-card-modal-panel" });
     this.propsEl = panel.createDiv({ cls: "nk-card-modal-props" });
     this.refreshProps();
 

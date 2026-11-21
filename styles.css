@@ -488,6 +488,10 @@
   height: 100%;
   min-width: 0;
 }
+/* Single scroll: the header block (icon, title, banner, properties) sits
+   inside the editor's own scroller, so the card scrolls as one page. */
+.nk-card-modal.nk-single-scroll .modal-content { overflow: hidden; }
+.nk-card-modal-top.is-in-editor { font-size: var(--font-ui-medium); padding-top: 4px; }
 /* We only want the editor surface, not the tab/header chrome. */
 .nk-card-editor-host .view-header { display: none; }
 .nk-card-editor-host .workspace-leaf-content { height: 100%; }
