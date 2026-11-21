@@ -1,6 +1,7 @@
-import { App, TFile, moment } from "obsidian";
+import { App, Menu, TFile, moment } from "obsidian";
 import { BoardConfig, Card, KANBAN_EXT, QUEST_START, QUEST_TARGET, TASK_DUE } from "./types";
-import { getProperty, parseBoard, questsRootPath, scanCards } from "./store";
+import { getProperty, parseBoard, questsRootPath, scanCards, writeProp } from "./store";
+import { undo } from "./undo";
 import { listQuests } from "./quests";
 import { applyColor } from "./colors";
 import { dayNum, parseDate, shortDate, today } from "./dates";
@@ -93,6 +94,9 @@ export function renderQuestBanner(
   } else {
     pill.setText("No quest");
   }
+  // Status chip: the note view has no dropdown for the board's select options
+  // (Obsidian has no select property type), so offer them here.
+  if (!ctx.isQuestNote) renderStatusChip(top, app, config, file);
 
   // Archived tasks are put away: out of the progress and the mini line.
   const tasks = ctx.quest
@@ -188,4 +192,61 @@ export function renderQuestBanner(
       dm.addEventListener("click", () => app.workspace.getLeaf(false).openFile(c.file));
     }
   }
+}
+
+/** Current value of a frontmatter key as a single string ("" if unset). */
+function fmString(app: App, file: TFile, key: string): string {
+  const v = app.metadataCache.getFileCache(file)?.frontmatter?.[key];
+  if (v === undefined || v === null) return "";
+  return String(Array.isArray(v) ? v[0] ?? "" : v).trim();
+}
+
+/**
+ * Clickable status chip for the banner: shows the task's group-by value in its
+ * board colour and opens a menu of the board's options (same as the card modal).
+ */
+function renderStatusChip(host: HTMLElement, app: App, config: BoardConfig, file: TFile): void {
+  const def = getProperty(config, config.groupBy);
+  if (!def || (def.type !== "select" && def.type !== "multiselect")) return;
+  const key = config.groupBy;
+  const current = fmString(app, file, key);
+  const opt = def.options?.find((o) => o.name === current);
+  const chip = host.createSpan({ cls: "nk-chip nk-qb-status" });
+  applyColor(chip, current ? opt?.color : "default");
+  chip.setText(current || `No ${key.toLowerCase()}`);
+  chip.setAttr("aria-label", `Change ${key.toLowerCase()}`);
+  chip.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const set = (value: string) =>
+      undo.record(`Edit ${key}`, async (tx) => {
+        await tx.frontmatter(file);
+        await writeProp(app, file, key, value);
+      });
+    const menu = new Menu();
+    for (const o of def.options ?? []) {
+      menu.addItem((i) =>
+        i
+          .setTitle(o.name)
+          .setChecked(o.name === current)
+          .onClick(() => void set(o.name))
+      );
+    }
+    if (current) {
+      menu.addSeparator();
+      menu.addItem((i) => i.setTitle("Clear").setIcon("x").onClick(() => void set("")));
+    }
+    menu.showAtMouseEvent(e);
+  });
+}
+
+/** Every option name of the select / multi-select property `key`, across all boards. */
+export function boardOptionsFor(boards: BoardIndex, key: string): string[] {
+  const out = new Set<string>();
+  for (const { config } of boards.entries()) {
+    const def = getProperty(config, key);
+    if (def && (def.type === "select" || def.type === "multiselect")) {
+      for (const o of def.options ?? []) out.add(o.name);
+    }
+  }
+  return [...out];
 }

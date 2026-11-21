@@ -36,3 +36,12 @@ export function progressOf(config: BoardConfig, cards: Card[]) {
   const counted = cards.length - abandoned;
   return { done, abandoned, counted, pct: counted ? Math.round((done / counted) * 100) : 0 };
 }
+
+/** Done or abandoned — the task is closed. Works on a raw status string. */
+export function isClosedStatus(status: string): boolean {
+  return DONE_RE.test(status) || ABANDONED_RE.test(status);
+}
+
+export function isArchivedStatus(status: string): boolean {
+  return ARCHIVED_RE.test(status);
+}

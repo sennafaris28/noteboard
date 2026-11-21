@@ -52,6 +52,7 @@ import { CardModal } from "./modals/card-modal";
 import { BoardSettingsModal } from "./modals/board-settings";
 import { confirmDialog, promptDate, promptText } from "./modals/prompt";
 import { renderJourney } from "./journey";
+import { renderSprint } from "./sprint";
 import { isTouch, onHold, onLongPress } from "./touch";
 import { isAbandoned, isArchived, isDone } from "./status";
 import {
@@ -98,6 +99,8 @@ export class KanbanView extends TextFileView {
   private goalLoads = new Set<string>();
   /** Names of radiant quests, refreshed every render. */
   private radiantQuests = new Set<string>();
+  /** Sprint view: sprints away from the current one (not saved). */
+  private sprintOffset = 0;
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
@@ -183,6 +186,12 @@ export class KanbanView extends TextFileView {
 
   clear(): void {
     this.contentEl.empty();
+  }
+
+  /** Let code outside the view (commands) change this board's config. */
+  updateConfig(fn: (config: BoardConfig) => void): void {
+    fn(this.config);
+    this.commit();
   }
 
   /** Mutate config then persist + re-render. */
@@ -299,7 +308,9 @@ export class KanbanView extends TextFileView {
 
     this.renderToolbar(root);
 
-    if (this.config.viewMode === "timeline") {
+    if (this.config.viewMode === "sprint") {
+      this.renderSprintView(root, cards);
+    } else if (this.config.viewMode === "timeline") {
       this.renderTimelineView(root, cards, quests);
     } else if (this.config.viewMode === "journey") {
       this.renderJourneyView(root, cards, quests);
@@ -346,6 +357,66 @@ export class KanbanView extends TextFileView {
     if (inbox.length) {
       this.renderColumn(board, { id: INBOX, color: "default" }, inbox, true);
     }
+  }
+
+  // ---- Sprint ---------------------------------------------------------------
+
+  private renderSprintView(root: HTMLElement, cards: Card[]): void {
+    const statusDef = getProperty(this.config, this.config.groupBy);
+    const statusOf = (c: Card) => {
+      const v = c.props[this.config.groupBy];
+      return v === undefined || v === null ? "" : String(Array.isArray(v) ? v[0] ?? "" : v).trim();
+    };
+    const entity = getProperty(this.config, "Entity");
+    renderSprint(root, {
+      config: this.config,
+      cards,
+      offset: this.sprintOffset,
+      setOffset: (n) => {
+        this.sprintOffset = n;
+        this.render();
+      },
+      statuses: (statusDef?.options ?? []).map((o) => ({ name: o.name, color: o.color })),
+      breakdown:
+        entity && (entity.type === "select" || entity.type === "multiselect")
+          ? { key: entity.name, color: (v) => entity.options?.find((o) => o.name === v)?.color }
+          : undefined,
+      isDone: (c) => isDone(this.config, c),
+      isAbandoned: (c) => isAbandoned(this.config, c),
+      isArchived: (c) => isArchived(this.config, c),
+      statusText: statusOf,
+      isRadiant: (c) => !!c.quest && this.radiantQuests.has(c.quest),
+      questColor: (name) => this.config.questColumns?.find((c) => c.id === name)?.color,
+      renderProps: (wrap, c) => {
+        for (const name of this.config.cardProps) {
+          if (name === this.config.groupBy) continue;
+          const def = getProperty(this.config, name);
+          const value = c.props[name];
+          if (!def || value === undefined || value === null || value === "") continue;
+          if (Array.isArray(value) && !value.length) continue;
+          this.renderCardProp(wrap, def, value);
+        }
+      },
+      openCard: (c) => new CardModal(this.app, this.config, c.file, () => this.commit()).open(),
+      cardMenu: (pos, c) => this.buildCardMenu(c, true).showAtPosition(pos),
+      setStatus: (c, status) => void this.setTaskStatus(c, status),
+      openSettings: () => this.openBoardSettings(),
+    });
+  }
+
+  /** Change a task's status from the sprint view (repaints at once, then writes). */
+  private async setTaskStatus(card: Card, status: string): Promise<void> {
+    return this.track("Change status", async (tx) => {
+      this.pendingGroup.set(card.path, status || UNCATEGORIZED);
+      this.render();
+      // The metadata "changed" event repaints with the real value afterwards.
+      try {
+        await tx.frontmatter(card.file);
+        await writeProp(this.app, card.file, this.config.groupBy, status);
+      } finally {
+        this.pendingGroup.delete(card.path);
+      }
+    });
   }
 
   // ---- Journey --------------------------------------------------------------
@@ -595,7 +666,7 @@ export class KanbanView extends TextFileView {
     const view: ViewMode = this.config.viewMode ?? "board";
     this.segmented<ViewMode>(
       bar,
-      [["board", "Board"], ["journey", "Journey"], ["timeline", "Timeline"]],
+      [["board", "Board"], ["journey", "Journey"], ["timeline", "Timeline"], ["sprint", "Sprint"]],
       view,
       (v) => {
         this.config.viewMode = v;
@@ -656,19 +727,21 @@ export class KanbanView extends TextFileView {
 
     const settingsBtn = bar.createDiv({ cls: "nk-icon-btn", attr: { "aria-label": "Board settings" } });
     setIcon(settingsBtn, "sliders-horizontal");
-    settingsBtn.addEventListener("click", () => {
-      // The settings modal edits config live; record it as one undo step on close.
-      const before = serializeBoard(this.config);
-      const modal = new BoardSettingsModal(this.app, this.config, () => this.commit());
-      const close = modal.onClose.bind(modal);
-      modal.onClose = () => {
-        close();
-        if (this.file && serializeBoard(this.config) !== before) {
-          undo.pushConfig("Board settings", this.file.path, before);
-        }
-      };
-      modal.open();
-    });
+    settingsBtn.addEventListener("click", () => this.openBoardSettings());
+  }
+
+  private openBoardSettings(): void {
+    // The settings modal edits config live; record it as one undo step on close.
+    const before = serializeBoard(this.config);
+    const modal = new BoardSettingsModal(this.app, this.config, () => this.commit());
+    const close = modal.onClose.bind(modal);
+    modal.onClose = () => {
+      close();
+      if (this.file && serializeBoard(this.config) !== before) {
+        undo.pushConfig("Board settings", this.file.path, before);
+      }
+    };
+    modal.open();
   }
 
   /** A small pill-style toggle group (Board | Timeline, Quests | Status...). */
@@ -1395,7 +1468,7 @@ export class KanbanView extends TextFileView {
       } catch (e) {
         new Notice((e as Error).message);
       }
-    }).open();
+    }, (this.config.questColumns ?? []).map((c) => c.color)).open();
   }
 
   /** Switch a quest between definite (has an end) and radiant (endless). */

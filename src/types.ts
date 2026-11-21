@@ -77,10 +77,16 @@ export interface BoardConfig {
   journeyStacked?: string[];
   /** Width of the timeline's Quests pane, in pixels. */
   timelineLabelW?: number;
+  /** First day (YYYY-MM-DD) of a known sprint, to line up with the team's cadence. */
+  sprintStart?: string;
+  /** The number of the sprint that starts on `sprintStart`. Default 1. */
+  sprintNumber?: number;
+  /** Sprint length in days. Default 14. */
+  sprintDays?: number;
 }
 
 export type GroupMode = "quest" | "status";
-export type ViewMode = "board" | "journey" | "timeline";
+export type ViewMode = "board" | "journey" | "timeline" | "sprint";
 export type TimelineZoom = "week" | "month" | "quarter";
 export type TimelineLayout = "rows" | "weeks";
 

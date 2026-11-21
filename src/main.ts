@@ -16,11 +16,15 @@ import {
   KANBAN_VIEW_TYPE,
   defaultBoard,
 } from "./types";
-import { parseBoard, questsRootPath, renameQuestKey, serializeBoard } from "./store";
+import { parseBoard, questsRootPath, renameQuestKey, scanCards, serializeBoard } from "./store";
 import { questRenamesInFlight } from "./quests";
 import { KanbanView } from "./view";
 import { promptText } from "./modals/prompt";
-import { BoardIndex, renderQuestBanner } from "./banner";
+import { BoardIndex, boardOptionsFor, renderQuestBanner } from "./banner";
+import { TASK_CLOSED, addIntakeFields, closedStampUpdate, statusText } from "./intake";
+import { isArchivedStatus, isClosedStatus } from "./status";
+import { toISO } from "./dates";
+import { QuickAddMemory, QuickAddModal } from "./modals/quick-add";
 import { undo } from "./undo";
 import { ExportKey, addExportMenu, exportDiagnostics, runExport } from "./export";
 
@@ -31,17 +35,22 @@ interface NKSettings {
   questBanner: boolean;
   /** Add an "Export" submenu to note menus (note ⋯ menu, file explorer). */
   exportInFileMenu: boolean;
+  /** Quick add remembers the last board and quest used. */
+  quickAdd: QuickAddMemory;
 }
 
 const DEFAULT_SETTINGS: NKSettings = {
   openBoardOnFolderClick: true,
   questBanner: true,
   exportInFileMenu: true,
+  quickAdd: {},
 };
 
 export default class NoteBoardPlugin extends Plugin {
   settings: NKSettings = { ...DEFAULT_SETTINGS };
   private boards = new BoardIndex(this.app);
+  /** Last seen status per task path, so Closed is stamped only on a real change. */
+  private lastStatus = new Map<string, string>();
 
   async onload(): Promise<void> {
     await this.loadSettings();
@@ -66,6 +75,19 @@ export default class NoteBoardPlugin extends Plugin {
     this.addRibbonIcon("layout-dashboard", "New kanban board", () =>
       this.createBoard()
     );
+
+    // Quick add: log a task (e.g. an ad-hoc request) without opening the board.
+    this.addRibbonIcon("list-plus", "Quick add task", () => this.openQuickAdd());
+    this.addCommand({
+      id: "quick-add-task",
+      name: "Quick add task…",
+      callback: () => this.openQuickAdd(),
+    });
+    this.addCommand({
+      id: "add-intake-fields",
+      name: "Add intake fields (Ticket, Requester, Entity, Closed) to board",
+      callback: () => void this.addIntakeFieldsToBoard(),
+    });
 
     this.addCommand({
       id: "create-kanban-board",
@@ -127,18 +149,29 @@ export default class NoteBoardPlugin extends Plugin {
     }, 300, true);
     const reindex = debounce(async () => {
       await this.boards.rebuild();
+      this.seedStatuses();
       this.refreshBanners();
     }, 500, true);
     const isBoard = (f: { path: string }) => f.path.endsWith(`.${KANBAN_EXT}`);
+    this.addBoardOptionSuggestions();
     this.app.workspace.onLayoutReady(() => void reindex());
     this.registerEvent(this.app.workspace.on("file-open", refresh));
     this.registerEvent(this.app.workspace.on("layout-change", refresh));
     this.registerEvent(this.app.metadataCache.on("changed", refresh));
+    // Stamp Closed when a task becomes Done / Abandoned, clear it if reopened.
+    this.registerEvent(
+      this.app.metadataCache.on("changed", (file, _data, cache) => void this.syncClosedStamp(file, cache.frontmatter))
+    );
     this.registerEvent(this.app.vault.on("modify", (f) => (isBoard(f) ? reindex() : refresh())));
     this.registerEvent(this.app.vault.on("create", (f) => isBoard(f) && reindex()));
     this.registerEvent(this.app.vault.on("delete", (f) => isBoard(f) && reindex()));
     this.registerEvent(
       this.app.vault.on("rename", (file, oldPath) => {
+        const st = this.lastStatus.get(oldPath);
+        if (st !== undefined) {
+          this.lastStatus.delete(oldPath);
+          this.lastStatus.set(file.path, st);
+        }
         void this.syncQuestNames(file, oldPath);
         reindex();
       })
@@ -223,6 +256,107 @@ export default class NoteBoardPlugin extends Plugin {
     if (!(f instanceof TFile)) return;
     const config = parseBoard(await this.app.vault.read(f));
     if (renameQuestKey(config, oldName, newName)) await this.app.vault.modify(f, serializeBoard(config));
+  }
+
+  /**
+   * Obsidian's Properties panel suggests a text property's values from what
+   * other notes already use, so board options nobody has used yet (e.g. "Done")
+   * never show up. Add every board's select options to those suggestions.
+   * `getFrontmatterPropertyValuesForKey` isn't in the public API, so this is
+   * guarded and undone on unload.
+   */
+  private addBoardOptionSuggestions(): void {
+    const cache = this.app.metadataCache as unknown as {
+      getFrontmatterPropertyValuesForKey?: (key: string) => string[];
+    };
+    const orig = cache.getFrontmatterPropertyValuesForKey;
+    if (typeof orig !== "function") return;
+    const boards = this.boards;
+    const patched = function (this: unknown, key: string): string[] {
+      const used = orig.call(this, key) ?? [];
+      const extra = boardOptionsFor(boards, key).filter((v) => !used.includes(v));
+      return extra.length ? [...used, ...extra] : used;
+    };
+    cache.getFrontmatterPropertyValuesForKey = patched;
+    this.register(() => {
+      if (cache.getFrontmatterPropertyValuesForKey === patched) cache.getFrontmatterPropertyValuesForKey = orig;
+    });
+  }
+
+  /** The board to target: the active board view, else the remembered/only one. */
+  private activeBoardPath(): string | undefined {
+    return this.app.workspace.getActiveViewOfType(KanbanView)?.file?.path;
+  }
+
+  private openQuickAdd(): void {
+    const boards = this.boards.entries();
+    if (!boards.length) {
+      new Notice("No NoteBoard boards in this vault yet — create one first.");
+      return;
+    }
+    new QuickAddModal(
+      this.app,
+      boards,
+      this.settings.quickAdd,
+      () => void this.saveSettings(),
+      this.activeBoardPath()
+    ).open();
+  }
+
+  /** Add Ticket / Requester / Entity / Closed to the open board (or the only board). */
+  private async addIntakeFieldsToBoard(): Promise<void> {
+    const view = this.app.workspace.getActiveViewOfType(KanbanView);
+    const all = this.boards.entries();
+    const path = view?.file?.path ?? (all.length === 1 ? all[0].path : undefined);
+    if (!path) {
+      new Notice("Open the board you want to add the fields to, then run this again.");
+      return;
+    }
+    let added: string[] = [];
+    const openView = this.app.workspace
+      .getLeavesOfType(KANBAN_VIEW_TYPE)
+      .map((l) => l.view as KanbanView)
+      .find((v) => v.file?.path === path);
+    if (openView) {
+      openView.updateConfig((c) => (added = addIntakeFields(c)));
+    } else {
+      const f = this.app.vault.getAbstractFileByPath(path);
+      if (!(f instanceof TFile)) return;
+      const config = parseBoard(await this.app.vault.read(f));
+      added = addIntakeFields(config);
+      if (added.length) await this.app.vault.modify(f, serializeBoard(config));
+    }
+    new Notice(
+      added.length
+        ? `Added ${added.join(", ")} to ${path}. Add Entity options from any card (Entity → New option…).`
+        : "This board already has all the intake fields."
+    );
+  }
+
+  /** Remember every task's current status (after the board index is built). */
+  private seedStatuses(): void {
+    this.lastStatus.clear();
+    for (const { config } of this.boards.entries()) {
+      for (const c of scanCards(this.app, config)) this.lastStatus.set(c.path, statusText(config, c.props));
+    }
+  }
+
+  /** Keep a task's Closed date in step with its status (boards with a Closed field only). */
+  private async syncClosedStamp(file: TFile, fm: Record<string, unknown> | undefined): Promise<void> {
+    const hit = this.boards.lookup(file);
+    if (!hit || hit.ctx.isQuestNote) return;
+    const props = fm ?? {};
+    const prev = this.lastStatus.get(file.path);
+    this.lastStatus.set(file.path, statusText(hit.config, props));
+    // A task we haven't seen (new, or moved in): open → done needs a known start.
+    // New notes created already-closed are stamped too.
+    const from = prev ?? (file.stat.ctime > Date.now() - 60_000 ? "" : undefined);
+    const next = closedStampUpdate(hit.config, from, props, toISO(new Date()), isClosedStatus, isArchivedStatus);
+    if (next === undefined) return;
+    await this.app.fileManager.processFrontMatter(file, (f) => {
+      if (next === null) delete f[TASK_CLOSED];
+      else f[TASK_CLOSED] = next;
+    });
   }
 
   /** Insert (or refresh) the quest banner under the title of every open task note. */

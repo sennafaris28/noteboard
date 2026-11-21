@@ -16,6 +16,22 @@
   font-size: 14px;
 }
 
+/* ---------- Theme hooks ----------
+   NoteBoard draws its dark surfaces from these variables. Themes can set them
+   (on body / .theme-dark) to match their palette; unset, the defaults apply.
+     --nk-surface       quiet surface: columns, panels, banner   (#1e2127)
+     --nk-raised        raised surface: cards, fields            (#272b31)
+     --nk-raised-hover  raised surface on hover        (theme hover tint)
+     --nk-accent-2      "today" markers                    (theme accent)
+     --nk-on-accent-2   text on --nk-accent-2                       (#fff)
+     --nk-modal-bg      card modal background          (theme modal bg)
+   Quest, status and option colours never come from these. */
+.theme-dark .nk-card:hover,
+.theme-dark .nk-card-modal-panel .nk-prop-value:hover {
+  background: var(--nk-raised-hover, var(--background-modifier-hover));
+}
+.theme-dark .nk-card-modal { background-color: var(--nk-modal-bg, var(--modal-background)); }
+
 /* ---------- Toolbar ---------- */
 .nk-toolbar {
   display: flex;
@@ -106,7 +122,7 @@
 }
 .theme-dark .nk-column {
   /* Quiet column leaning toward the board — clearly below the card tone. */
-  background: #1e2127;
+  background: var(--nk-surface, #1e2127);
   box-shadow:
     0 1px 2px rgba(0, 0, 0, calc(0.15 * var(--nk-col-shadow))),
     0 6px 16px rgba(0, 0, 0, calc(0.175 * var(--nk-col-shadow)));
@@ -220,7 +236,7 @@
 .nk-card-menu-btn svg { width: 16px; height: 16px; }
 .theme-dark .nk-card {
   /* A step lighter than the column so cards clearly float above it. */
-  background: #272b31;
+  background: var(--nk-raised, #272b31);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 .nk-card:hover { background: var(--background-modifier-hover); }
@@ -514,6 +530,74 @@
 .nk-card-modal button.nk-btn-green { background: #2e9e5b; }
 .nk-card-modal button.nk-btn-blue { background: var(--interactive-accent); }
 
+/* ---------- Raised fields (same depth language as the board) ----------
+   Quiet panel = column tone; each value = card tone, floating on it. */
+.nk-card-modal-panel {
+  margin: 0 0 14px;
+  padding: 10px 12px 8px;
+  border-radius: 10px;
+  background: var(--background-primary-alt);
+  box-shadow: 0 1px 2px rgba(15, 15, 15, 0.04), 0 4px 12px rgba(15, 15, 15, 0.05);
+}
+.theme-dark .nk-card-modal-panel {
+  background: var(--nk-surface, #1e2127);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15), 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+.nk-card-modal-panel .nk-card-modal-props { gap: 6px; margin-bottom: 6px; }
+.nk-card-modal-panel .nk-prop-row { align-items: center; padding: 0; min-height: 32px; }
+.nk-card-modal-panel .nk-prop-label { padding-top: 0; }
+.nk-card-modal-panel .nk-prop-value {
+  flex: 0 1 420px;
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 4px;
+  border-radius: 6px;
+  background: var(--background-secondary);
+  box-shadow: 0 1px 2px rgba(15, 15, 15, 0.08);
+  transition: background 0.08s, box-shadow 0.08s;
+}
+.theme-dark .nk-card-modal-panel .nk-prop-value {
+  background: var(--nk-raised, #272b31);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.nk-card-modal-panel .nk-prop-value:hover { background: var(--background-modifier-hover); }
+.nk-card-modal-panel .nk-prop-value:focus-within {
+  box-shadow: 0 0 0 2px var(--interactive-accent), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+/* The field itself is the surface now; inner controls stay flat. */
+.nk-card-modal-panel .nk-prop-value input[type="text"],
+.nk-card-modal-panel .nk-prop-value input[type="number"],
+.nk-card-modal-panel .nk-prop-value input[type="text"]:hover,
+.nk-card-modal-panel .nk-prop-value input[type="number"]:hover,
+.nk-card-modal-panel .nk-prop-value input:focus,
+.nk-card-modal-panel .nk-select-box:hover { background: transparent; box-shadow: none; }
+.nk-card-modal-panel .nk-select-box { flex: 1 1 auto; }
+.nk-card-modal-panel .nk-datefield { flex: 1 1 auto; }
+.nk-card-modal-panel .nk-datefield-input { flex: 1 1 auto; width: auto; }
+.nk-card-modal-panel .nk-datefield-btn { margin-left: auto; }
+.nk-card-modal-panel .nk-prop-value:has(input[type="checkbox"]) { flex: 0 0 auto; padding: 0 8px; }
+.nk-card-modal-panel .nk-add-prop { margin-left: -2px; }
+
+/* Body editor: a raised sheet instead of a bordered box. */
+.nk-card-modal .nk-card-render,
+.nk-card-modal .nk-card-editor-host,
+.nk-card-modal .nk-card-body {
+  border: none;
+  border-radius: 10px;
+  background: var(--background-secondary);
+  box-shadow: 0 1px 2px rgba(15, 15, 15, 0.06), 0 4px 12px rgba(15, 15, 15, 0.06);
+}
+.theme-dark .nk-card-modal .nk-card-render,
+.theme-dark .nk-card-modal .nk-card-editor-host,
+.theme-dark .nk-card-modal .nk-card-body {
+  background: var(--nk-surface, #1e2127);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15), 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+.nk-card-modal .nk-card-editor-host .workspace-leaf-content,
+.nk-card-modal .nk-card-editor-host .view-content,
+.nk-card-modal .nk-card-editor-host .cm-editor { background: transparent; }
+
 /* ============================================================
    Settings modal
    ============================================================ */
@@ -524,6 +608,7 @@
   padding: 3px 10px;
   border-radius: 14px;
   border: 1px solid var(--background-modifier-border);
+  background: var(--background-modifier-hover); /* stays visible on borderless themes */
   font-size: 13px;
   color: var(--text-muted);
   cursor: pointer;
@@ -662,7 +747,7 @@
   background: var(--background-secondary);
   box-shadow: 0 1px 3px rgba(15, 15, 15, 0.12);
 }
-.theme-dark .nk-seg-btn.is-active { background: #272b31; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+.theme-dark .nk-seg-btn.is-active { background: var(--nk-raised, #272b31); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
 .nk-seg-solo { background: var(--background-modifier-form-field); padding: 5px 10px; }
 
 /* Quest label on a card (status-grouped board) */
@@ -691,8 +776,8 @@
   --nk-tl-label-shadow: 6px 0 14px -6px rgba(15, 15, 15, 0.18);
 }
 .theme-dark .nk-tl-grid {
-  --nk-tl-surface: #1e2127;
-  --nk-tl-card: #272b31;
+  --nk-tl-surface: var(--nk-surface, #1e2127);
+  --nk-tl-card: var(--nk-raised, #272b31);
   --nk-tl-faint: rgba(255, 255, 255, 0.03);
   --nk-tl-major: rgba(255, 255, 255, 0.075);
   --nk-tl-label-shadow: 8px 0 16px -6px rgba(0, 0, 0, 0.55);
@@ -749,7 +834,7 @@
   z-index: 3;
   pointer-events: none;
 }
-.nk-tl-today { width: 2px; background: var(--interactive-accent); opacity: 0.55; }
+.nk-tl-today { width: 2px; background: var(--nk-accent-2, var(--interactive-accent)); opacity: 0.7; }
 .nk-tl-hover { width: 1px; background: var(--text-faint); opacity: 0; transition: opacity 0.1s; }
 .nk-tl-grid.is-hovering .nk-tl-hover { opacity: 0.6; }
 .nk-tl-today-pill,
@@ -764,7 +849,7 @@
   white-space: nowrap;
   pointer-events: none;
 }
-.nk-tl-today-pill { color: #fff; background: var(--interactive-accent); z-index: 2; }
+.nk-tl-today-pill { color: var(--nk-on-accent-2, #fff); background: var(--nk-accent-2, var(--interactive-accent)); z-index: 2; }
 .nk-tl-hover-pill {
   color: var(--text-normal);
   background: var(--background-secondary);
@@ -1087,13 +1172,15 @@
   font-size: 12.5px;
   user-select: none;
 }
-.theme-dark .nk-quest-banner { background: #1e2127; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
+.theme-dark .nk-quest-banner { background: var(--nk-surface, #1e2127); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4); }
 .nk-card-modal .nk-quest-banner { margin: 0 0 12px; }
 .nk-qb-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .nk-qb-pill { display: inline-flex; align-items: center; gap: 5px; flex: 0 1 auto; min-width: 0; }
 .nk-qb-pill.is-link { cursor: pointer; }
 .nk-qb-pill.is-link:hover { filter: brightness(1.15); }
 .nk-qb-icon { font-size: 13px; }
+.nk-qb-status { flex: 0 0 auto; cursor: pointer; font-weight: 500; }
+.nk-qb-status:hover { filter: brightness(1.15); }
 .nk-qb-meta { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); }
 .nk-qb-spacer { flex: 1 1 auto; }
 .nk-qb-updated { flex: 0 0 auto; color: var(--text-faint); white-space: nowrap; }
@@ -1138,8 +1225,8 @@
   height: 20px;
   width: 2px;
   transform: translateX(-50%);
-  background: var(--interactive-accent);
-  opacity: 0.6;
+  background: var(--nk-accent-2, var(--interactive-accent));
+  opacity: 0.75;
   border-radius: 1px;
 }
 .nk-qb-diamond {
@@ -1157,7 +1244,7 @@
   opacity: 0.75;
   z-index: 1;
 }
-.theme-dark .nk-qb-diamond { box-shadow: 0 0 0 2px #1e2127; }
+.theme-dark .nk-qb-diamond { box-shadow: 0 0 0 2px var(--nk-surface, #1e2127); }
 .nk-qb-diamond:hover { opacity: 1; }
 .nk-qb-diamond.is-done { opacity: 0.4; }
 .nk-qb-diamond.is-overdue { box-shadow: 0 0 0 2px var(--background-primary-alt), 0 0 0 3.5px #e5534b; }
@@ -1196,8 +1283,8 @@
   --nk-jr-faint: rgba(0, 0, 0, 0.1);
 }
 .theme-dark .nk-jr {
-  --nk-jr-surface: #1e2127;
-  --nk-jr-card: #272b31;
+  --nk-jr-surface: var(--nk-surface, #1e2127);
+  --nk-jr-card: var(--nk-raised, #272b31);
   --nk-jr-faint: rgba(255, 255, 255, 0.09);
 }
 .nk-jr-inner { padding: 14px 0 40px; }
@@ -1596,11 +1683,12 @@
   overflow-x: auto;
   overflow-y: hidden;
   padding-bottom: 6px;
+  /* Chromium ignores ::-webkit-scrollbar once scrollbar-width is set, so the
+     colour has to come through scrollbar-color — from the theme's own vars. */
   scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-bg, var(--nk-jr-faint)) transparent;
 }
-.nk-jr-lanewrap::-webkit-scrollbar { height: 6px; }
-.nk-jr-lanewrap::-webkit-scrollbar-thumb { border-radius: 3px; background: var(--nk-jr-faint); }
-.nk-jr-lanewrap:hover::-webkit-scrollbar-thumb { background: var(--text-faint); }
+.nk-jr-lanewrap:hover { scrollbar-color: var(--scrollbar-active-thumb-bg, var(--text-faint)) transparent; }
 
 /* dd/mm/yyyy date field (replaces the locale-bound native date input) */
 .nk-datefield { position: relative; display: inline-flex; align-items: center; gap: 4px; }
@@ -1662,3 +1750,32 @@
   gap: 2px;
 }
 .nk-touch .nk-card-modal .nk-modal-actions { right: 58px; }
+
+/* ---- Quick add ---- */
+.nk-quickadd-modal .setting-item { padding: 8px 0; }
+.nk-quickadd-modal .nk-quickadd-title { width: min(320px, 60vw); }
+.nk-quickadd-modal .nk-quickadd-buttons .setting-item-control { gap: 8px; }
+
+/* ---- Sprint view ---- */
+.nk-sprint { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+.nk-sp-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; padding: 12px 16px 4px; }
+.nk-sp-nav { display: flex; align-items: center; gap: 6px; }
+.nk-sp-title { display: flex; flex-direction: column; line-height: 1.2; padding: 0 4px; min-width: 150px; text-align: center; }
+.nk-sp-name { font-weight: 700; font-size: 15px; }
+.nk-sp-dates { font-size: 12px; color: var(--text-muted); }
+.nk-sp-badge { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: var(--interactive-accent); color: var(--text-on-accent); white-space: nowrap; }
+.nk-sp-stats { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.nk-sp-stat { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.nk-sp-stat-val { font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
+.nk-sp-stat-label { font-size: 11px; color: var(--text-muted); text-transform: lowercase; }
+.nk-sp-breakdown { display: flex; flex-wrap: wrap; gap: 4px; flex-basis: 100%; }
+.nk-sp-hint { margin: 4px 16px 0; font-size: 12px; color: var(--text-muted); }
+.nk-sp-hint-link { color: var(--text-accent); cursor: pointer; text-decoration: underline; }
+.nk-sp-empty { margin: 8px 16px 0; font-size: 13px; color: var(--text-faint); }
+.nk-sp-board { padding-top: 10px; }
+.nk-sp-quest { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nk-sp-reasons { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.nk-sp-reason { font-size: 10.5px; line-height: 16px; padding: 0 6px; border-radius: 8px; color: var(--text-muted); background: var(--background-modifier-hover); white-space: nowrap; }
+.nk-sp-reason.is-carried { color: #fff; background: #d9730d; }
+.nk-sp-reason.is-closed { color: #fff; background: #448361; }
+.nk-sp-reason.is-active { color: #fff; background: var(--interactive-accent); }

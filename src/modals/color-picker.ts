@@ -6,6 +6,7 @@ import {
   applyColor,
   isHexColor,
   normalizeHex,
+  randomColor,
 } from "../colors";
 
 /**
@@ -169,16 +170,19 @@ export class GroupColorModal extends Modal {
 /** Modal to create a quest: name, type (definite / radiant) and color. */
 export class NewQuestModal extends Modal {
   private name = "";
-  private color = "blue";
+  private color: string;
   private radiant = false;
   private typeEl!: HTMLElement;
   private pickerEl!: HTMLElement;
 
   constructor(
     app: App,
-    private onSubmit: (name: string, color: string, radiant: boolean) => void
+    private onSubmit: (name: string, color: string, radiant: boolean) => void,
+    /** Colours other quests already use; the random pick avoids them. */
+    usedColors: readonly (string | undefined)[] = []
   ) {
     super(app);
+    this.color = randomColor(usedColors);
   }
 
   onOpen(): void {

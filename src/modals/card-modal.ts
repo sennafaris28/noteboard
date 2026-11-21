@@ -259,15 +259,16 @@ export class CardModal extends Modal {
     const qctx = questContext(this.config, this.file);
     if (qctx) renderQuestBanner(contentEl.createDiv(), this.appRef, this.config, this.file, qctx);
 
-    this.propsEl = contentEl.createDiv({ cls: "nk-card-modal-props" });
+    // Properties sit on a quiet panel (like a board column); each value is a
+    // raised field on top of it (like a card).
+    const panel = contentEl.createDiv({ cls: "nk-card-modal-panel" });
+    this.propsEl = panel.createDiv({ cls: "nk-card-modal-props" });
     this.refreshProps();
 
-    const addProp = contentEl.createDiv({ cls: "nk-add-prop" });
+    const addProp = panel.createDiv({ cls: "nk-add-prop" });
     setIcon(addProp.createSpan({ cls: "nk-footer-icon" }), "plus");
     addProp.createSpan({ text: " Add a property" });
     addProp.addEventListener("click", () => this.addProperty());
-
-    contentEl.createEl("hr", { cls: "nk-card-divider" });
 
     // --- body: embed Obsidian's own editor so it reads + edits like a page ---
     const bodyWrap = contentEl.createDiv({ cls: "nk-card-body-wrap" });

@@ -9,6 +9,8 @@ import {
 import { COLOR_KEYS, NOTION_COLORS, applyColor } from "../colors";
 import { promptText } from "./prompt";
 import { NewGroupModal } from "./color-picker";
+import { dateField } from "../dateinput";
+import { SPRINT_DAYS_DEFAULT } from "../sprint";
 
 const TYPES: { value: PropertyType; label: string }[] = [
   { value: "text", label: "Text" },
@@ -90,6 +92,39 @@ export class BoardSettingsModal extends Modal {
             this.onChange();
           })
       );
+
+    // --- Sprints ---
+    contentEl.createEl("h4", { text: "Sprints" });
+    const startSetting = new Setting(contentEl)
+      .setName("A sprint's first day")
+      .setDesc("Any sprint your team has run (dd/mm/yyyy), so NoteBoard's sprints line up with theirs. Blank = sprints start this week's Monday.");
+    dateField(startSetting.controlEl, this.config.sprintStart ?? "", (iso) => {
+      this.config.sprintStart = iso || undefined;
+      this.onChange();
+    });
+    new Setting(contentEl)
+      .setName("That sprint's number")
+      .setDesc("What the team calls the sprint starting on that day, e.g. 24. Later sprints count up from it.")
+      .addText((t) => {
+        t.inputEl.type = "number";
+        t.setValue(String(this.config.sprintNumber ?? 1)).onChange((v) => {
+          const n = Math.round(Number(v));
+          this.config.sprintNumber = Number.isFinite(n) && v.trim() !== "" ? n : undefined;
+          this.onChange();
+        });
+      });
+    new Setting(contentEl)
+      .setName("Sprint length")
+      .setDesc("In days. 14 = two weeks.")
+      .addText((t) => {
+        t.inputEl.type = "number";
+        t.inputEl.min = "1";
+        t.setValue(String(this.config.sprintDays ?? SPRINT_DAYS_DEFAULT)).onChange((v) => {
+          const n = Math.round(Number(v));
+          this.config.sprintDays = n >= 1 ? n : undefined;
+          this.onChange();
+        });
+      });
 
     // --- Appearance ---
     contentEl.createEl("h4", { text: "Appearance" });

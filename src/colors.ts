@@ -28,6 +28,18 @@ export function autoColor(seed: string): string {
   return pickable[h % pickable.length];
 }
 
+/**
+ * A random palette colour for a new quest, preferring ones no other quest
+ * uses yet so quests stay easy to tell apart.
+ */
+export function randomColor(used: readonly (string | undefined)[] = []): string {
+  const pickable = COLOR_KEYS.filter((c) => c !== "default");
+  const taken = new Set(used);
+  const fresh = pickable.filter((c) => !taken.has(c));
+  const pool = fresh.length ? fresh : pickable;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 export function colorClass(color: string | undefined): string {
   const key = color && NOTION_COLORS[color] ? color : "default";
   return `nk-color-${key}`;
