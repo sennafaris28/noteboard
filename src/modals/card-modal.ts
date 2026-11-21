@@ -1,3 +1,4 @@
+import { NkModal } from "./base";
 import {
   App,
   Component,
@@ -36,7 +37,7 @@ function readFrontmatter(app: App, file: TFile): Record<string, unknown> {
   return fm ? { ...fm } : {};
 }
 
-export class CardModal extends Modal {
+export class CardModal extends NkModal {
   private props: Record<string, unknown> = {};
   /** Set once the user actually changes something (title, body, or a property). */
   private dirty = false;

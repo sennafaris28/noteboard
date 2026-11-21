@@ -1,3 +1,4 @@
+import { NkModal } from "./base";
 import { App, Menu, Modal, Notice, Setting, setIcon } from "obsidian";
 import {
   BoardConfig,
@@ -21,7 +22,7 @@ const TYPES: { value: PropertyType; label: string }[] = [
   { value: "checkbox", label: "Checkbox" },
 ];
 
-export class BoardSettingsModal extends Modal {
+export class BoardSettingsModal extends NkModal {
   constructor(
     private appRef: App,
     private config: BoardConfig,
@@ -279,7 +280,7 @@ export class BoardSettingsModal extends Modal {
 }
 
 /** Edits the option list (name + color) of a select / multiselect property. */
-class OptionsModal extends Modal {
+class OptionsModal extends NkModal {
   constructor(
     private appRef: App,
     private def: PropertyDef,

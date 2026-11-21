@@ -1,3 +1,4 @@
+import { NkModal } from "./base";
 import { App, Modal, Setting } from "obsidian";
 import { dateField } from "../dateinput";
 
@@ -14,7 +15,7 @@ export function promptText(
   });
 }
 
-class PromptModal extends Modal {
+class PromptModal extends NkModal {
   private resolved = false;
   constructor(
     app: App,
@@ -83,7 +84,7 @@ export function promptDate(app: App, title: string, initial = ""): Promise<strin
   return new Promise((resolve) => new DatePromptModal(app, title, initial, resolve).open());
 }
 
-class DatePromptModal extends Modal {
+class DatePromptModal extends NkModal {
   private resolved = false;
   constructor(
     app: App,
@@ -133,7 +134,7 @@ export function confirmDialog(
   return new Promise((resolve) => new ConfirmModal(app, title, message, cta, resolve).open());
 }
 
-class ConfirmModal extends Modal {
+class ConfirmModal extends NkModal {
   private resolved = false;
   constructor(
     app: App,

@@ -1,3 +1,4 @@
+import { NkModal } from "./base";
 import { App, Modal, Notice, Setting } from "obsidian";
 import {
   COLOR_KEYS,
@@ -76,7 +77,7 @@ export function renderColorPicker(
 }
 
 /** Modal to create a new group: name + color picker. */
-export class NewGroupModal extends Modal {
+export class NewGroupModal extends NkModal {
   private name = "";
   private color = "blue";
   private pickerEl!: HTMLElement;
@@ -139,7 +140,7 @@ export class NewGroupModal extends Modal {
 }
 
 /** Modal to change an existing group's color (applies live). */
-export class GroupColorModal extends Modal {
+export class GroupColorModal extends NkModal {
   constructor(
     app: App,
     private current: string,
@@ -168,7 +169,7 @@ export class GroupColorModal extends Modal {
 }
 
 /** Modal to create a quest: name, type (definite / radiant) and color. */
-export class NewQuestModal extends Modal {
+export class NewQuestModal extends NkModal {
   private name = "";
   private color: string;
   private radiant = false;

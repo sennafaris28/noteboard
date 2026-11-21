@@ -1779,3 +1779,16 @@
 .nk-sp-reason.is-carried { color: #fff; background: #d9730d; }
 .nk-sp-reason.is-closed { color: #fff; background: #448361; }
 .nk-sp-reason.is-active { color: #fff; background: var(--interactive-accent); }
+
+/* iPad: centre NoteBoard dialogs above the on-screen keyboard.
+   Obsidian sets --keyboard-height on mobile (0 when hidden) but only lifts its
+   own phone modals; phones are left to Obsidian's built-in handling. */
+.is-tablet .modal-container.nk-kb-safe {
+  box-sizing: border-box;
+  padding-bottom: var(--keyboard-height, 0px);
+  transition: padding-bottom 0.15s ease-out;
+}
+.is-tablet .modal-container.nk-kb-safe .modal {
+  max-height: calc(100vh - var(--keyboard-height, 0px) - 32px);
+  overflow-y: auto;
+}

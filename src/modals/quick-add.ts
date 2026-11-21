@@ -1,3 +1,4 @@
+import { NkModal } from "./base";
 import { App, Modal, Notice, Setting, TFile } from "obsidian";
 import { BoardConfig, INBOX, PropertyDef, TASK_CREATED, UNCATEGORIZED } from "../types";
 import { createCard, getProperty, questFolderPath } from "../store";
@@ -24,7 +25,7 @@ export interface QuickAddMemory {
  * own fields (ticket, requester, entity, due …). The note is created in the
  * quest's folder with a Created stamp.
  */
-export class QuickAddModal extends Modal {
+export class QuickAddModal extends NkModal {
   private boardPath: string;
   private title = "";
   private quest = INBOX;

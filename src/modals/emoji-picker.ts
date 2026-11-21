@@ -1,3 +1,4 @@
+import { NkModal } from "./base";
 import { App, Modal } from "obsidian";
 
 /** Frontmatter key used to store a card/page icon (an emoji). */
@@ -160,7 +161,7 @@ export function randomIconFor(seed: string): string {
  * A lightweight Notion-style icon picker: filter box, emoji grid, free paste,
  * and a remove action. `onPick` receives an emoji string, or "" to clear.
  */
-export class EmojiPickerModal extends Modal {
+export class EmojiPickerModal extends NkModal {
   private query = "";
 
   constructor(
