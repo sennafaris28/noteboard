@@ -71,8 +71,12 @@ Log a task without opening the board, which suits ad-hoc requests that turn up m
 
 ## Cards & notes
 
-- **Card modal**: title, icon, properties, and Obsidian's own editor for the body. Footer:
-  Delete · Open as note · OK. New cards you close untouched are discarded.
+- **Card modal**: title, icon, properties (in two columns, one when the card is narrow), and
+  Obsidian's own editor for the body. Footer: Delete · Open as note · OK. New cards you close
+  untouched are discarded.
+- **Created**: every new card gets a `Created` stamp (date and time) in its frontmatter. The card
+  shows it read-only, like Notion's "Created time"; cards made before 1.2.0 show the file's creation
+  time instead. A board that defines its own `Created` property gets an ordinary editable field.
 - **Quest banner** under the title of every task note: quest, progress, a **status chip** you can click
   to change the status (Obsidian's Properties panel has no dropdown type), dates, last edited, and a
   mini quest line with this task highlighted. The Properties panel's suggestions for the status (and

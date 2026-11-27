@@ -11,7 +11,8 @@ import {
   WorkspaceLeaf,
   setIcon,
 } from "obsidian";
-import { BoardConfig, PropertyDef } from "../types";
+import { BoardConfig, PropertyDef, TASK_CREATED } from "../types";
+import { formatDMY, parseDateTime } from "../dates";
 import { applyColor } from "../colors";
 import { readBody, renameCard, writeBody, writeProp } from "../store";
 import { promptText } from "./prompt";
@@ -339,6 +340,26 @@ export class CardModal extends NkModal {
     if (!el || el.contains(document.activeElement)) return;
     el.empty();
     for (const def of this.config.properties) this.renderPropRow(el, def);
+    // Created is read-only, like Notion's "Created time": the stamp written when
+    // the card was made, else the file's creation time. Skipped if the board
+    // defines its own Created property (then it's an ordinary, editable row).
+    if (!this.config.properties.some((p) => p.name === TASK_CREATED)) this.renderCreatedRow(el);
+  }
+
+  private renderCreatedRow(parent: HTMLElement): void {
+    const stamped = parseDateTime(this.props[TASK_CREATED]);
+    const d = stamped ?? new Date(this.file.stat.ctime);
+    const row = parent.createDiv({ cls: "nk-prop-row nk-prop-readonly" });
+    const label = row.createDiv({ cls: "nk-prop-label" });
+    setIcon(label.createSpan({ cls: "nk-prop-type-icon" }), "clock");
+    label.createSpan({ text: TASK_CREATED });
+    const p = (n: number) => String(n).padStart(2, "0");
+    const hasTime = !stamped || /T\d{2}:\d{2}/.test(String(this.props[TASK_CREATED]));
+    row.createDiv({
+      cls: "nk-prop-value",
+      text: formatDMY(d) + (hasTime ? ` ${p(d.getHours())}:${p(d.getMinutes())}` : ""),
+      attr: { "aria-label": stamped ? "Set when the card was created" : "From the file's creation time" },
+    });
   }
 
   private renderIcon(parent: HTMLElement): void {

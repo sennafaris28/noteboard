@@ -547,11 +547,21 @@
   background: var(--nk-surface, #1e2127);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15), 0 6px 16px rgba(0, 0, 0, 0.18);
 }
-.nk-card-modal-panel .nk-card-modal-props { gap: 6px; margin-bottom: 6px; }
+/* Properties in two columns side by side; one column when the card is narrow. */
+.nk-card-modal-panel { container-type: inline-size; }
+.nk-card-modal-panel .nk-card-modal-props {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 28px;
+  margin-bottom: 6px;
+}
+@container (max-width: 640px) {
+  .nk-card-modal-panel .nk-card-modal-props { grid-template-columns: minmax(0, 1fr); }
+}
 .nk-card-modal-panel .nk-prop-row { align-items: center; padding: 0; min-height: 32px; }
-.nk-card-modal-panel .nk-prop-label { padding-top: 0; }
+.nk-card-modal-panel .nk-prop-label { padding-top: 0; width: 120px; flex-basis: 120px; }
 .nk-card-modal-panel .nk-prop-value {
-  flex: 0 1 420px;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   min-height: 32px;
@@ -582,6 +592,18 @@
 .nk-card-modal-panel .nk-datefield-btn { margin-left: auto; }
 .nk-card-modal-panel .nk-prop-value:has(input[type="checkbox"]) { flex: 0 0 auto; padding: 0 8px; }
 .nk-card-modal-panel .nk-add-prop { margin-left: -2px; }
+/* Read-only Created: plain text on the panel, no field to click. */
+.nk-card-modal-panel .nk-prop-readonly .nk-prop-value,
+.nk-card-modal-panel .nk-prop-readonly .nk-prop-value:hover,
+.theme-dark .nk-card-modal-panel .nk-prop-readonly .nk-prop-value,
+.theme-dark .nk-card-modal-panel .nk-prop-readonly .nk-prop-value:hover {
+  padding: 0 8px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  cursor: default;
+}
 
 /* Body editor: a raised sheet instead of a bordered box. */
 .nk-card-modal .nk-card-render,

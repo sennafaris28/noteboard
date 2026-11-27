@@ -8,8 +8,10 @@ import {
   INBOX,
   PropertyDef,
   QUESTS_FOLDER_DEFAULT,
+  TASK_CREATED,
   UNCATEGORIZED,
 } from "./types";
+import { toISODateTime } from "./dates";
 
 /** Parse a `.kanban` file's text into a BoardConfig, applying defaults. */
 export function parseBoard(raw: string): BoardConfig {
@@ -357,6 +359,8 @@ export async function createCard(
   const fm: Record<string, unknown> = {};
   if (group !== UNCATEGORIZED) fm[config.groupBy] = group;
   Object.assign(fm, extra);
+  // Every card remembers when it was made (shown read-only as "Created").
+  fm[TASK_CREATED] ??= toISODateTime(new Date());
   const yaml = Object.keys(fm).length ? `---\n${stringifyYaml(fm)}---\n\n` : "";
   const file = await app.vault.create(path, yaml);
   return file;
